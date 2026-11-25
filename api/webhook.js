@@ -1,12 +1,30 @@
-// Trạm Backend xử lý Webhook nhận & gửi tin nhắn thật từ Facebook Messenger
-// Tự động chạy tại địa chỉ: https://omnichat-app-beige.vercel.app/api/webhook
+// Trạm Backend xử lý Webhook & Lưu trữ vĩnh viễn vào Upstash Redis (Vercel Storage)
+// Tự động chạy tại: https://omnichat-app-beige.vercel.app/api/webhook
 
-// Bộ nhớ tạm lưu danh sách tin nhắn mới nhận được & Token của từng Fanpage
-let recentWebhookEvents = [];
-let pageTokensMap = {};
+const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+// Hàm gọi lệnh tới Upstash Redis REST API
+async function redisCommand(commandArray) {
+  if (!REDIS_URL || !REDIS_TOKEN) return null;
+  try {
+    const res = await fetch(REDIS_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(commandArray),
+    });
+    const data = await res.json();
+    return data.result;
+  } catch (err) {
+    console.error('Lỗi kết nối Redis:', err);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
-  // Cho phép giao diện web OmniChat gọi API không bị chặn CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -17,43 +35,47 @@ export default async function handler(req, res) {
 
   const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'omnichat_fb_verify_2026';
 
-  // =========================================================================
   // 1. XÁC THỰC WEBHOOK VỚI META DEVELOPERS (HTTP GET)
-  // =========================================================================
   if (req.method === 'GET' && req.query['hub.mode']) {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('✅ Đã xác thực Webhook thành công với Meta!');
       return res.status(200).send(challenge);
     }
     return res.status(403).send('Verify token không khớp');
   }
 
-  // =========================================================================
-  // 2. GIAO DIỆN WEB LẤY DANH SÁCH TIN NHẮN MỚI NHẬN TỪ FACEBOOK (HTTP GET)
-  // =========================================================================
+  // 2. GIAO DIỆN WEB ĐỌC TOÀN BỘ TIN NHẮN & FANPAGE TỪ DATABASE (HTTP GET)
   if (req.method === 'GET' && req.query.action === 'poll') {
+    const rawEvents = await redisCommand(['LRANGE', 'omnichat:events', '0', '99']);
+    const events = Array.isArray(rawEvents)
+      ? rawEvents.map((item) => {
+          try {
+            return JSON.parse(item);
+          } catch {
+            return null;
+          }
+        }).filter(Boolean)
+      : [];
+
     return res.status(200).json({
       ok: true,
-      events: recentWebhookEvents
+      dbConnected: Boolean(REDIS_URL && REDIS_TOKEN),
+      events,
     });
   }
 
-  // =========================================================================
-  // 3. XỬ LÝ CÁC YÊU CẦU POST (TỪ FACEBOOK ĐẨY VỀ HOẶC TỪ WEB GỬI ĐI)
-  // =========================================================================
+  // 3. XỬ LÝ CÁC YÊU CẦU POST
   if (req.method === 'POST') {
     const body = req.body || {};
 
-    // Trường hợp A: Giao diện OmniChat lưu Page Access Token sau khi đăng nhập FB
+    // Trường hợp A: Lưu Page Access Token vĩnh viễn vào Database khi kết nối Fanpage
     if (body.action === 'register_pages' && Array.isArray(body.pages)) {
       for (const p of body.pages) {
         if (p.pageId && p.accessToken) {
-          pageTokensMap[p.pageId] = p.accessToken;
-          // Tự động đăng ký Webhook cho Fanpage này qua Graph API
+          await redisCommand(['HSET', 'omnichat:page_tokens', p.pageId, p.accessToken]);
           try {
             await fetch(
               `https://graph.facebook.com/v21.0/${p.pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,message_deliveries,message_reads&access_token=${encodeURIComponent(
@@ -69,15 +91,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, registered: body.pages.length });
     }
 
-    // Trường hợp B: Nhân viên bấm nút "Gửi" trên web để trả lời khách hàng thật
+    // Trường hợp B: Gửi tin nhắn phản hồi thật sang Messenger & lưu lịch sử vào Database
     if (body.action === 'send_reply') {
       const { pageId, recipientPsid, text, pageAccessToken } = body;
-      const tokenToUse = pageAccessToken || pageTokensMap[pageId];
+      let tokenToUse = pageAccessToken;
+
+      if (!tokenToUse && pageId) {
+        tokenToUse = await redisCommand(['HGET', 'omnichat:page_tokens', pageId]);
+      }
 
       if (!tokenToUse || !recipientPsid || !text) {
         return res.status(400).json({
           ok: false,
-          error: 'Thiếu Page Access Token, PSID người nhận hoặc nội dung tin nhắn.'
+          error: 'Thiếu Page Access Token, PSID người nhận hoặc nội dung tin nhắn.',
         });
       }
 
@@ -92,11 +118,27 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               messaging_type: 'RESPONSE',
               recipient: { id: recipientPsid },
-              message: { text }
-            })
+              message: { text },
+            }),
           }
         );
         const fbData = await fbRes.json();
+
+        // Lưu cả tin nhắn nhân viên vừa trả lời vào Redis để đồng bộ đa thiết bị
+        if (!fbData.error) {
+          const agentEvent = {
+            id: fbData.message_id || 'agent_' + Date.now(),
+            direction: 'outgoing',
+            platform: 'facebook',
+            pageId: pageId || '',
+            senderPsid: recipientPsid,
+            text,
+            timestamp: Date.now(),
+          };
+          await redisCommand(['LPUSH', 'omnichat:events', JSON.stringify(agentEvent)]);
+          await redisCommand(['LTRIM', 'omnichat:events', '0', '199']);
+        }
+
         return res.status(200).json({ ok: !fbData.error, data: fbData });
       } catch (err) {
         return res.status(500).json({ ok: false, error: err.message });
@@ -112,12 +154,11 @@ export default async function handler(req, res) {
             const senderPsid = event.sender.id;
             const text = event.message.text || '[Khách đã gửi hình ảnh / tệp đính kèm]';
 
-            // Lấy tên & ảnh đại diện người gửi nếu có Page Access Token
             let senderName = `Khách Facebook (${senderPsid.slice(-4)})`;
             let senderAvatar =
               'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop&crop=faces';
 
-            const token = pageTokensMap[pageId];
+            const token = await redisCommand(['HGET', 'omnichat:page_tokens', pageId]);
             if (token) {
               try {
                 const profileRes = await fetch(
@@ -133,25 +174,25 @@ export default async function handler(req, res) {
                   senderAvatar = profile.profile_pic;
                 }
               } catch (e) {
-                // Giữ tên mặc định nếu khách khóa quyền xem thông tin cá nhân
+                // Giữ tên mặc định nếu khách khóa thông tin cá nhân
               }
             }
 
-            recentWebhookEvents.unshift({
+            const newEvent = {
               id: event.message.mid || 'fb_' + Date.now(),
+              direction: 'incoming',
               platform: 'facebook',
               pageId,
               senderPsid,
               senderName,
               senderAvatar,
               text,
-              timestamp: event.timestamp || Date.now()
-            });
+              timestamp: event.timestamp || Date.now(),
+            };
 
-            // Giới hạn lưu 50 tin nhắn gần nhất trong bộ nhớ
-            if (recentWebhookEvents.length > 50) {
-              recentWebhookEvents = recentWebhookEvents.slice(0, 50);
-            }
+            // Lưu vĩnh viễn vào danh sách trên Upstash Redis (giữ tối đa 200 tin gần nhất)
+            await redisCommand(['LPUSH', 'omnichat:events', JSON.stringify(newEvent)]);
+            await redisCommand(['LTRIM', 'omnichat:events', '0', '199']);
           }
         }
       }
