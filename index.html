@@ -7,6 +7,26 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Tích hợp chính thức Facebook JavaScript SDK v21.0 -->
+    <script>
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: '1505864344771468',
+          cookie: true,
+          xfbml: true,
+          version: 'v21.0',
+        });
+        window.fbSdkReady = true;
+      };
+    </script>
+    <script
+      async
+      defer
+      crossorigin="anonymous"
+      src="https://connect.facebook.net/vi_VN/sdk.js"
+    ></script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
