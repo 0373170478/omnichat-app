@@ -1566,7 +1566,19 @@ export default function App() {
           ...prev
         ];
       });
-
+// Gửi Page Access Token lên Backend để lưu vĩnh viễn vào Upstash Redis
+   fetch('/api/webhook', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       action: 'register_pages',
+       pages: pagesToIntegrate.map((p) => ({
+         pageId: p.pageId,
+         name: p.name,
+         accessToken: p.pageAccessToken
+       }))
+     })
+   }).catch(() => {});
       setApiLogs((prev) => [...prev, ...generatedLogs]);
       setIsConnectingApi(false);
       triggerToast(
