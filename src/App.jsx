@@ -1244,37 +1244,113 @@ export default function App() {
     setConnectModalOpen(true);
   };
 
-  const handleFacebookPersonalLogin = (useCustomToken = false) => {
+ const handleFacebookPersonalLogin = (useCustomToken = false) => {
     setIsConnectingApi(true);
-    setTimeout(() => {
-      const profile = {
-        name: 'Nguyễn Minh Quân (Business Admin)',
-        email: 'quan.nguyen@saigonford.com.vn',
-        fbUserId: '1022948172635491',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=faces',
-        userAccessToken:
-          useCustomToken && customUserToken.trim()
-            ? customUserToken.trim()
-            : 'EAABsbCS1iHgBO_LONG_LIVED_USER_TOKEN_2026_99817263',
-        expiresIn: '60 ngày'
-      };
-      setFbPersonalAccount(profile);
+
+    // Hàm xử lý sau khi có User Access Token thật từ Facebook
+    const fetchRealPagesFromGraphApi = (userAccessToken, userInfo = null) => {
+      fetch(
+        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,username,category,picture,access_token,tasks&access_token=${encodeURIComponent(
+          userAccessToken
+        )}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            setIsConnectingApi(false);
+            triggerToast(
+              'Lỗi từ Facebook Graph API',
+              data.error.message || 'Token không hợp lệ hoặc thiếu quyền pages_show_list.'
+            );
+            return;
+          }
+
+          const realPages = (data.data || []).map((p) => ({
+            pageId: p.id,
+            name: p.name,
+            username: p.username ? `@${p.username}` : `@${p.id}`,
+            category: p.category || 'Fanpage Facebook',
+            avatarText: (p.name || 'FB').slice(0, 2).toUpperCase(),
+            tasks: p.tasks || ['MANAGE', 'MESSAGING'],
+            pageAccessToken: p.access_token
+          }));
+
+          const profile = {
+            name: userInfo?.name || 'Tài khoản Facebook Đã Xác Thực',
+            email: userInfo?.email || 'admin@facebook.com',
+            fbUserId: userInfo?.id || 'verified_fb_user',
+            avatar:
+              userInfo?.picture?.data?.url ||
+              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=faces',
+            userAccessToken: userAccessToken,
+            expiresIn: '60 ngày'
+          };
+
+          setFbPersonalAccount(profile);
+          if (realPages.length > 0) {
+            setAvailablePagesList(realPages);
+            setSelectedNewPageIds([realPages[0].pageId]);
+          }
+          setIsConnectingApi(false);
+          setOauthStep(2);
+          setApiLogs([
+            {
+              step: 'FB.login() -> OAuth 2.0 User Access Token',
+              status: '200 OK',
+              payload: `Đã xác thực tài khoản: ${profile.name}`
+            },
+            {
+              step: 'GET /v21.0/me/accounts?fields=id,name,username,access_token,tasks',
+              status: '200 OK',
+              payload: `Tìm thấy ${realPages.length} Fanpage thật bạn đang quản lý!`
+            }
+          ]);
+        })
+        .catch((err) => {
+          setIsConnectingApi(false);
+          triggerToast('Lỗi kết nối mạng', err.message);
+        });
+    };
+
+    // Trường hợp 1: Người dùng dán sẵn User Access Token từ Meta Graph Explorer
+    if (useCustomToken && customUserToken.trim()) {
+      fetchRealPagesFromGraphApi(customUserToken.trim());
+      return;
+    }
+
+    // Trường hợp 2: Mở cửa sổ đăng nhập Facebook Cá nhân thật qua Meta SDK
+    if (!window.FB) {
       setIsConnectingApi(false);
-      setOauthStep(2);
-      setApiLogs([
-        {
-          step: 'POST /v21.0/oauth/access_token',
-          status: '200 OK',
-          payload: `grant_type=fb_exchange_token -> Long-Lived User Token (${profile.expiresIn})`
-        },
-        {
-          step: 'GET /v21.0/me/accounts?fields=id,name,username,access_token,tasks',
-          status: '200 OK',
-          payload: `Tìm thấy ${availablePagesList.length} Fanpage có quyền MESSAGING & MANAGE`
+      triggerToast(
+        'Facebook SDK chưa sẵn sàng',
+        'Vui lòng tắt trình chặn quảng cáo (AdBlock) hoặc tải lại trang rồi thử lại.'
+      );
+      return;
+    }
+
+    window.FB.login(
+      function (response) {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          // Lấy tên & ảnh đại diện Facebook cá nhân vừa đăng nhập
+          window.FB.api('/me', { fields: 'id,name,email,picture' }, function (userInfo) {
+            fetchRealPagesFromGraphApi(accessToken, userInfo);
+          });
+        } else {
+          setIsConnectingApi(false);
+          triggerToast(
+            'Đã hủy đăng nhập Facebook',
+            'Bạn cần cấp quyền quản lý Trang để đồng bộ Fanpage.'
+          );
         }
-      ]);
-    }, 600);
+      },
+      {
+        scope: 'pages_show_list,pages_messaging,pages_manage_metadata,pages_read_engagement',
+        return_scopes: true
+      }
+    );
   };
+
 
   const handleAddManualPageToDiscover = (e) => {
     e.preventDefault();
