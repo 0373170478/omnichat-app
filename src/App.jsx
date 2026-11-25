@@ -99,127 +99,7 @@ const PlatformBadge = ({ platform, size = 'sm' }) => {
 };
 
 // --- DỮ LIỆU FANPAGE MẶC ĐỊNH (GIỐNG ẢNH SUBIZ CỦA BẠN) ---
-const INITIAL_FANPAGES = [
-  {
-    id: 'page_1',
-    pageId: '104829104829101',
-    name: 'Vĩnh Long Ford 2S',
-    username: '@vinhlongford2s',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_VL2S_998120491204912049',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_2',
-    pageId: '319256744592842',
-    name: 'Sài Gòn Ford Tuyển Dụng',
-    username: '@319256744592842',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_SGFTD_7729104829104829',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_3',
-    pageId: '104829104829103',
-    name: 'Ford Cao Thắng',
-    username: '@caothang.fordofficial',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_FCT_661920481920481920',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_4',
-    pageId: '104829104829104',
-    name: 'Sài Gòn Ford',
-    username: '@SaigonFord.hcmc',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_SGF_551920481920481920',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_5',
-    pageId: '104829104829105',
-    name: 'Ford Phố Quang',
-    username: '@fordphoquangofficial',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_FPQ_441920481920481920',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_6',
-    pageId: '104829104829106',
-    name: 'Sài Gòn Ford - Used Car',
-    username: '@saigonfordusedcar',
-    avatarText: 'Ford',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: false,
-    accessToken: 'EAABsbCS1iHgBO_SGFUC_331920481920481920',
-    webhookSubscribed: true
-  },
-  {
-    id: 'page_7',
-    pageId: '104829104829107',
-    name: 'Ford Nam Sài Gòn',
-    username: '@namsaigon.ford',
-    avatarText: '26',
-    integratedAt: '10 tháng',
-    capiGranted: false,
-    pixelId: '',
-    messengerCallEnabled: false,
-    lastUpdated: '2 tháng',
-    updatedBy: 'Sài Gòn Ford',
-    connected: true,
-    isBusiness: true,
-    accessToken: 'EAABsbCS1iHgBO_FNSG_221920481920481920',
-    webhookSubscribed: true
-  }
-];
+const INITIAL_FANPAGES = [];
 
 // --- DANH SÁCH FANPAGE KHẢ DỤNG KHI QUÉT TỪ FACEBOOK CÁ NHÂN (GET /me/accounts) ---
 const DISCOVERABLE_FACEBOOK_PAGES = [
@@ -262,258 +142,7 @@ const DISCOVERABLE_FACEBOOK_PAGES = [
 ];
 
 // --- DỮ LIỆU MẪU HỘI THOẠI BAN ĐẦU ---
-const INITIAL_CONVERSATIONS = [
-  {
-    id: 'conv_1',
-    name: 'Vũ Văn Dũng',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces',
-    platform: 'zalo',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'zalo_uid_8491204912',
-    phone: '0912 345 678',
-    email: 'dung.vuvan@gmail.com',
-    leadStage: 'Đang tư vấn',
-    unreadCount: 0,
-    lastTime: 'Vừa xong',
-    tags: ['Đã báo giá', 'Quan tâm Everest'],
-    notes: 'Khách quan tâm dòng Ford Everest Titanium 4x4 màu trắng. Đã gửi catalogue PDF bảng giá lăn bánh.',
-    activities: [
-      { id: 'act_1', time: '10:15, Hôm nay', text: 'Khách hàng bắt đầu hội thoại từ Zalo OA Sài Gòn Ford' },
-      { id: 'act_2', time: '13:13, Hôm nay', text: 'Agent Trần Minh đã gửi tệp Báo_giá_Ford_2026.pdf' }
-    ],
-    messages: [
-      {
-        id: 'm_101',
-        sender: 'customer',
-        type: 'text',
-        text: 'Chào shop, bên mình gửi giúp anh bảng giá lăn bánh chi tiết bản Titanium tháng này nhé.',
-        timestamp: '10:16, Hôm nay'
-      },
-      {
-        id: 'm_102',
-        sender: 'agent',
-        agentName: 'Trần Minh',
-        type: 'text',
-        text: 'Bộ phận Cố Vấn Dịch vụ sẽ liên hệ để báo giá dịch vụ tại Sài Gòn Ford trong thời gian sớm nhất.\n\nSài Gòn Ford chân thành cảm ơn Quý Khách đã tin tưởng và lựa chọn dịch vụ, kính chúc Quý Khách một ngày tốt lành! 💙',
-        timestamp: '13:12, Hôm nay',
-        status: 'read'
-      },
-      {
-        id: 'm_103',
-        sender: 'agent',
-        agentName: 'Vũ Văn Dũng',
-        type: 'pdf',
-        text: 'Đây là tài liệu cho bạn',
-        fileName: 'Bao_Gia_Lan_Banh_Sai_Gon_Ford_2026.pdf',
-        fileSize: '2.4 MB',
-        timestamp: '13:13, Hôm nay',
-        status: 'read'
-      }
-    ]
-  },
-  {
-    id: 'conv_2',
-    name: 'Phạm Văn Tám',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=faces',
-    platform: 'facebook',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'psid_9876543210',
-    phone: '0988 776 543',
-    email: 'tam.pham88@yahoo.com',
-    leadStage: 'Mới',
-    unreadCount: 2,
-    lastTime: '4 giờ',
-    tags: ['Khách tiềm năng', 'Facebook Ads'],
-    notes: 'Tương tác từ bài quảng cáo ưu đãi bảo dưỡng định kỳ.',
-    activities: [
-      { id: 'act_21', time: '4 giờ trước', text: 'Lead stage set to Qualified bởi hệ thống tự động' }
-    ],
-    messages: [
-      {
-        id: 'm_201',
-        sender: 'customer',
-        type: 'text',
-        text: 'Cho mình hỏi gói bảo dưỡng 40.000km hết khoảng bao nhiêu tiền vậy shop?',
-        timestamp: '09:20, Hôm nay'
-      },
-      {
-        id: 'm_202',
-        sender: 'customer',
-        type: 'text',
-        text: 'Cuối tuần này thứ 7 còn lịch trống buổi sáng không ạ?',
-        timestamp: '09:21, Hôm nay'
-      }
-    ]
-  },
-  {
-    id: 'conv_3',
-    name: 'Minh Anh Official',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=faces',
-    platform: 'tiktok',
-    channelName: 'TikTok Shop VN',
-    platformUserId: 'tt_openid_7729104',
-    phone: '0903 112 233',
-    email: 'minhanh.creator@gmail.com',
-    leadStage: 'Đang tư vấn',
-    unreadCount: 1,
-    lastTime: '4 giờ',
-    tags: ['TikTok Video', 'VIP'],
-    notes: 'Khách hỏi mua số lượng sỉ từ video review trên TikTok.',
-    activities: [
-      { id: 'act_31', time: '4 giờ trước', text: 'Nhắn tin từ Video #8921 trên TikTok Business' }
-    ],
-    messages: [
-      {
-        id: 'm_301',
-        sender: 'customer',
-        type: 'text',
-        text: 'Chào shop, mình vừa xem clip trên TikTok. Mẫu phụ kiện này còn đủ màu đen nhám không shop ơi?',
-        timestamp: '09:45, Hôm nay'
-      }
-    ]
-  },
-  {
-    id: 'conv_4',
-    name: 'Nhu Le',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=faces',
-    platform: 'zalo',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'zalo_uid_5512093',
-    phone: '0938 445 990',
-    email: 'nhule.design@gmail.com',
-    leadStage: 'Đã báo giá',
-    unreadCount: 0,
-    lastTime: '4 giờ',
-    tags: ['Đã gửi ảnh'],
-    notes: 'Đã gửi hình ảnh thực tế nội thất xe.',
-    activities: [
-      { id: 'act_41', time: '4 giờ trước', text: 'Agent đã gửi 1 hình ảnh' }
-    ],
-    messages: [
-      {
-        id: 'm_401',
-        sender: 'customer',
-        type: 'text',
-        text: 'Gửi giúp em hình ảnh thực tế khoang lái với ạ.',
-        timestamp: '09:10, Hôm nay'
-      },
-      {
-        id: 'm_402',
-        sender: 'agent',
-        agentName: 'Trần Minh',
-        type: 'image',
-        text: 'Em gửi chị hình ảnh thực tế tại showroom bên em ạ:',
-        imageUrl: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&auto=format&fit=crop',
-        timestamp: '09:15, Hôm nay',
-        status: 'read'
-      }
-    ]
-  },
-  {
-    id: 'conv_5',
-    name: 'T Anh',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces',
-    platform: 'zalo',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'zalo_uid_3319822',
-    phone: '0977 889 112',
-    email: 'tanh.nguyen@company.vn',
-    leadStage: 'Đang tư vấn',
-    unreadCount: 0,
-    lastTime: '5 giờ',
-    tags: ['Bảo hiểm'],
-    notes: 'Cần gia hạn bảo hiểm thân vỏ trong tháng 11.',
-    activities: [],
-    messages: [
-      {
-        id: 'm_501',
-        sender: 'agent',
-        agentName: 'Trần Minh',
-        type: 'text',
-        text: 'Agent: Gửi một hình ảnh chứng nhận bảo hiểm điện tử.',
-        timestamp: '08:30, Hôm nay',
-        status: 'read'
-      }
-    ]
-  },
-  {
-    id: 'conv_6',
-    name: 'Phung My Hanh',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces',
-    platform: 'zalo',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'zalo_uid_6648291',
-    phone: '0919 223 445',
-    email: 'myhanh.phung@gmail.com',
-    leadStage: 'Mới',
-    unreadCount: 1,
-    lastTime: '5 giờ',
-    tags: ['Cần gọi lại'],
-    notes: 'Khách yêu cầu tư vấn trả góp lãi suất ưu đãi.',
-    activities: [],
-    messages: [
-      {
-        id: 'm_601',
-        sender: 'customer',
-        type: 'text',
-        text: 'Chị muốn hỏi thủ tục vay trả góp 80% giá trị xe cần giấy tờ gì em?',
-        timestamp: '08:15, Hôm nay'
-      }
-    ]
-  },
-  {
-    id: 'conv_7',
-    name: 'Hoàng Dũng Sg',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=faces',
-    platform: 'zalo',
-    channelName: 'Sài Gòn Ford',
-    platformUserId: 'zalo_uid_9918273',
-    phone: '0909 555 888',
-    email: 'hoangdung.sg@gmail.com',
-    leadStage: 'Chốt đơn',
-    unreadCount: 0,
-    lastTime: '5 giờ',
-    tags: ['VIP', 'Đã đặt cọc'],
-    notes: 'Đã đặt cọc 50 triệu. Hẹn giao xe ngày 28/11.',
-    activities: [],
-    messages: [
-      {
-        id: 'm_701',
-        sender: 'agent',
-        agentName: 'Sài Gòn Ford',
-        type: 'text',
-        text: 'Dạ, Anh/Chị vui lòng cung cấp thông tin CCCD để bên em xuất hóa đơn và làm thủ tục bấm biển số ạ.',
-        timestamp: '08:05, Hôm nay',
-        status: 'read'
-      }
-    ]
-  },
-  {
-    id: 'conv_8',
-    name: 'Khánh Linh Studio',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop&crop=faces',
-    platform: 'tiktok',
-    channelName: 'TikTok Shop VN',
-    platformUserId: 'tt_openid_9938120',
-    phone: '0868 990 123',
-    email: 'booking@khanhlinhstudio.vn',
-    leadStage: 'Đang tư vấn',
-    unreadCount: 1,
-    lastTime: '6 giờ',
-    tags: ['TikTok Live'],
-    notes: 'Khách săn voucher trên phiên Live tối qua.',
-    activities: [],
-    messages: [
-      {
-        id: 'm_801',
-        sender: 'customer',
-        type: 'text',
-        text: 'Mã giảm giá trên livestream hôm qua còn áp dụng được cho đơn hôm nay không ạ?',
-        timestamp: '07:40, Hôm nay'
-      }
-    ]
-  }
-];
+const INITIAL_CONVERSATIONS = [];
 
 // --- TIN NHẮN MẪU (QUICK REPLIES) ---
 const QUICK_REPLIES = [
@@ -746,6 +375,46 @@ async function sendReplyToCustomer(pageAccessToken, recipientPsid, text) {
 };
 
 export default function App() {
+   // --- DANH SÁCH TÀI KHOẢN ĐĂNG NHẬP HỆ THỐNG (TỰ DO CHỈNH SỬA) ---
+  const STAFF_ACCOUNTS = [
+    { username: 'admin', password: '123456', name: 'Nguyễn Nguyên Cường (Admin)', role: 'Quản trị viên' },
+    { username: 'cskh1', password: '123456', name: 'Nhân viên CSKH 01', role: 'Tư vấn viên' },
+    { username: 'cskh2', password: '123456', name: 'Nhân viên CSKH 02', role: 'Tư vấn viên' }
+  ];
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('omnichat_logged_in_user_v1');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  const handleStaffLogin = (e) => {
+    e.preventDefault();
+    const found = STAFF_ACCOUNTS.find(
+      (acc) =>
+        acc.username.toLowerCase() === loginUsername.trim().toLowerCase() &&
+        acc.password === loginPassword
+    );
+    if (!found) {
+      setLoginError('Tên đăng nhập hoặc mật khẩu không chính xác!');
+      return;
+    }
+    setCurrentUser(found);
+    setLoginError('');
+    localStorage.setItem('omnichat_logged_in_user_v1', JSON.stringify(found));
+  };
+
+  const handleStaffLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('omnichat_logged_in_user_v1');
+  };
+
   // --- STATE CHÍNH ---
   // Mặc định mở màn hình 'tools' (Cài đặt -> Tích hợp -> Facebook) đúng theo ảnh người dùng gửi
   const [activeNav, setActiveNav] = useState('tools'); // 'messages' | 'orders' | 'live' | 'customers' | 'analytics' | 'ai' | 'tools'
@@ -1666,6 +1335,65 @@ export default function App() {
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
+// Nếu chưa đăng nhập, hiển thị màn hình đăng nhập bảo mật
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0F294A] via-[#153864] to-[#0B1E38] flex items-center justify-center p-4 font-sans">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+          <div className="p-7 pb-5 text-center border-b border-slate-100">
+            <div className="w-12 h-12 rounded-2xl bg-[#0F294A] text-white flex items-center justify-center mx-auto shadow-md mb-3">
+              <MessageSquare className="w-6 h-6 text-sky-400" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">
+              Omni<span className="text-[#0084FF]">Chat</span> Workspace
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              Hệ thống Quản lý Tin nhắn Đa nền tảng Nội bộ
+            </p>
+          </div>
+
+          <form onSubmit={handleStaffLogin} className="p-7 space-y-4 text-xs">
+            {loginError && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 font-medium">
+                {loginError}
+              </div>
+            )}
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1.5">Tên đăng nhập</label>
+              <input
+                type="text"
+                required
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                placeholder="Nhập tài khoản (VD: admin)"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-[#0084FF]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1.5">Mật khẩu</label>
+              <input
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-[#0084FF]"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-[#0084FF] hover:bg-blue-600 text-white font-bold text-sm shadow-md transition"
+            >
+              Đăng nhập vào hệ thống
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F4F6F9] text-slate-800 overflow-hidden font-sans select-none sm:select-auto">
@@ -1778,7 +1506,7 @@ export default function App() {
               />
             </div>
             <span className="text-xs font-semibold hidden sm:inline tracking-wide">
-              SÀI GÒN F...
+              {currentUser.name}
             </span>
           </button>
         </div>
