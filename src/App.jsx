@@ -3060,7 +3060,7 @@ export default function App() {
                       <span>
                         {isConnectingApi
                           ? 'Đang xác thực với Facebook OAuth...'
-                          : 'Tiếp tục với Facebook Cá Nhân (Nguyễn Minh Quân)'}
+                          : 'Tiếp tục với Facebook Cá Nhân'}
                       </span>
                     </button>
                   </div>
