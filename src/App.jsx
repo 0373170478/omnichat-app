@@ -526,6 +526,7 @@ export default function App() {
 
         newEvents.reverse().forEach((ev) => {
           processedWebhookIdsRef.current.add(ev.id);
+          if (ev.direction === 'outgoing') return;
           const matchedPage = fanpages.find((f) => f.pageId === ev.pageId);
           const channelName = matchedPage ? matchedPage.name : 'Fanpage Facebook';
           const nowTime =
@@ -755,7 +756,7 @@ export default function App() {
     const newMsg = {
       id: 'msg_' + Date.now(),
       sender: 'agent',
-      agentName: 'Trần Minh',
+     agentName: currentUser?.name || 'Quản trị viên',
       type: customPayload?.type || 'text',
       text: textToSend,
       fileName: customPayload?.fileName,
