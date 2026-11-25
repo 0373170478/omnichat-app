@@ -841,7 +841,87 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+// Tự động đồng bộ tin nhắn thật từ Facebook Webhook (/api/webhook) mỗi 4 giây
+  const processedWebhookIdsRef = useRef(new Set());
+  useEffect(() => {
+    const syncRealFacebookMessages = async () => {
+      try {
+        const res = await fetch('/api/webhook?action=poll');
+        const data = await res.json();
+        if (!data.ok || !Array.isArray(data.events)) return;
 
+        const newEvents = data.events.filter(
+          (ev) => !processedWebhookIdsRef.current.has(ev.id)
+        );
+        if (newEvents.length === 0) return;
+
+        newEvents.reverse().forEach((ev) => {
+          processedWebhookIdsRef.current.add(ev.id);
+          const matchedPage = fanpages.find((f) => f.pageId === ev.pageId);
+          const channelName = matchedPage ? matchedPage.name : 'Fanpage Facebook';
+          const nowTime =
+            new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) +
+            ', Hôm nay';
+
+          setConversations((prev) => {
+            const idx = prev.findIndex(
+              (c) => c.platform === 'facebook' && c.platformUserId === ev.senderPsid
+            );
+            const incomingMsg = {
+              id: ev.id,
+              sender: 'customer',
+              type: 'text',
+              text: ev.text,
+              timestamp: nowTime
+            };
+
+            if (idx !== -1) {
+              const updated = [...prev];
+              const target = updated[idx];
+              updated.splice(idx, 1);
+              return [
+                {
+                  ...target,
+                  lastTime: 'Vừa xong',
+                  unreadCount: target.id === selectedId ? 0 : target.unreadCount + 1,
+                  messages: [...target.messages, incomingMsg]
+                },
+                ...updated
+              ];
+            }
+
+            return [
+              {
+                id: 'fb_conv_' + ev.senderPsid,
+                name: ev.senderName,
+                avatar: ev.senderAvatar,
+                platform: 'facebook',
+                channelName,
+                platformUserId: ev.senderPsid,
+                phone: 'Chưa cập nhật',
+                email: '',
+                leadStage: 'Mới',
+                unreadCount: 1,
+                lastTime: 'Vừa xong',
+                tags: ['Facebook Live', channelName],
+                notes: 'Khách nhắn tin thật qua Messenger Webhook.',
+                activities: [],
+                messages: [incomingMsg]
+              },
+              ...prev
+            ];
+          });
+
+          triggerToast(`Tin nhắn thật từ ${ev.senderName}`, ev.text, 'facebook');
+        });
+      } catch (err) {
+        // Bỏ qua nếu đang chạy ngoại tuyến
+      }
+    };
+
+    const timer = setInterval(syncRealFacebookMessages, 4000);
+    return () => clearInterval(timer);
+  }, [fanpages, selectedId]);
   // Lưu localStorage
   useEffect(() => {
     try {
@@ -1041,6 +1121,21 @@ export default function App() {
         };
       })
     );
+// Nếu hội thoại là Facebook thật, gọi Backend gửi tin nhắn sang Messenger của khách
+    if (activeConversation.platform === 'facebook' && textToSend) {
+      const matchedPage = fanpages.find((f) => f.name === activeConversation.channelName);
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_reply',
+          pageId: matchedPage?.pageId,
+          pageAccessToken: matchedPage?.accessToken,
+          recipientPsid: activeConversation.platformUserId,
+          text: textToSend
+        })
+      }).catch(() => {});
+    }
 
     if (!customPayload) {
       setMessageInput('');
