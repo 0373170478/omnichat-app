@@ -524,26 +524,44 @@ export default function App() {
         );
         if (newEvents.length === 0) return;
 
-        newEvents.reverse().forEach((ev) => {
+         newEvents.reverse().forEach((ev) => {
           processedWebhookIdsRef.current.add(ev.id);
-          if (ev.direction === 'outgoing') return;
-          const matchedPage = fanpages.find((f) => f.pageId === ev.pageId);
-          const channelName = matchedPage ? matchedPage.name : 'Fanpage Facebook';
-          const nowTime =
-            new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) +
-            ', Hôm nay';
 
+          // 1. Tìm đúng Fanpage theo pageId (ép kiểu String để khớp tuyệt đối)
+          const matchedPage = fanpages.find(
+            (f) => String(f.pageId) === String(ev.pageId)
+          );
+          const channelName = matchedPage
+            ? matchedPage.name
+            : ev.platform === 'zalo'
+            ? 'Zalo Cá Nhân'
+            : ev.platform === 'tiktok'
+            ? 'TikTok Business'
+            : 'Fanpage Facebook';
+
+          const nowTime =
+            new Date().toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) + ', Hôm nay';
+
+          const incomingMsg = {
+            id: ev.id,
+            sender: 'customer',
+            senderName: ev.senderName,
+            type: 'text',
+            text: ev.text,
+            timestamp: nowTime,
+          };
+
+          // 2. Ghép đúng vào hội thoại của khách hàng này (khớp cả platform + senderPsid + pageId)
           setConversations((prev) => {
             const idx = prev.findIndex(
-              (c) => c.platform === 'facebook' && c.platformUserId === ev.senderPsid
+              (c) =>
+                c.platform === (ev.platform || 'facebook') &&
+                String(c.platformUserId) === String(ev.senderPsid) &&
+                (!c.pageId || String(c.pageId) === String(ev.pageId))
             );
-            const incomingMsg = {
-              id: ev.id,
-              sender: 'customer',
-              type: 'text',
-              text: ev.text,
-              timestamp: nowTime
-            };
 
             if (idx !== -1) {
               const updated = [...prev];
@@ -552,33 +570,40 @@ export default function App() {
               return [
                 {
                   ...target,
+                  name: ev.senderName || target.name,
+                  avatar: ev.senderAvatar || target.avatar,
+                  pageId: String(ev.pageId || target.pageId || ''),
+                  channelName,
                   lastTime: 'Vừa xong',
-                  unreadCount: target.id === selectedId ? 0 : target.unreadCount + 1,
-                  messages: [...target.messages, incomingMsg]
+                  unreadCount:
+                    target.id === selectedId ? 0 : target.unreadCount + 1,
+                  messages: [...target.messages, incomingMsg],
                 },
-                ...updated
+                ...updated,
               ];
             }
 
+            // 3. Nếu là khách mới tinh -> Tạo khung chat riêng biệt cho khách này
             return [
               {
-                id: 'fb_conv_' + ev.senderPsid,
+                id: `${ev.platform || 'facebook'}_${ev.pageId}_${ev.senderPsid}`,
                 name: ev.senderName,
                 avatar: ev.senderAvatar,
-                platform: 'facebook',
+                platform: ev.platform || 'facebook',
+                pageId: String(ev.pageId || ''),
                 channelName,
-                platformUserId: ev.senderPsid,
+                platformUserId: String(ev.senderPsid),
                 phone: 'Chưa cập nhật',
                 email: '',
                 leadStage: 'Mới',
                 unreadCount: 1,
                 lastTime: 'Vừa xong',
                 tags: ['Facebook Live', channelName],
-                notes: 'Khách nhắn tin thật qua Messenger Webhook.',
+                notes: 'Khách nhắn tin thật qua Webhook.',
                 activities: [],
-                messages: [incomingMsg]
+                messages: [incomingMsg],
               },
-              ...prev
+              ...prev,
             ];
           });
 
@@ -798,14 +823,50 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Gửi tin nhắn phản hồi thật ra Facebook Messenger / Zalo / TikTok & báo lỗi nếu thất bại
+    if (
+      ['facebook', 'zalo', 'tiktok'].includes(activeConversation.platform) &&
+      textToSend
+    ) {
+      const matchedPage = fanpages.find(
+        (f) =>
+          String(f.pageId) === String(activeConversation.pageId) ||
+          f.name === activeConversation.channelName
+      );
+      const fallbackConfig = apiConfigs[activeConversation.platform];
+
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           action: 'send_reply',
-          pageId: matchedPage?.pageId,
-          pageAccessToken: matchedPage?.accessToken,
-          recipientPsid: activeConversation.platformUserId,
-          text: textToSend
+          platform: activeConversation.platform,
+          pageId: matchedPage?.pageId || activeConversation.pageId,
+          pageAccessToken:
+            matchedPage?.accessToken || fallbackConfig?.accessToken,
+          recipientPsid: String(activeConversation.platformUserId),
+          text: textToSend,
+        }),
+      })
+        .then((r) => r.json())
+        .then((resData) => {
+          if (!resData.ok) {
+            triggerToast(
+              'Không gửi được tin nhắn đi',
+              resData.error || 'Facebook từ chối gửi tin nhắn này.',
+              activeConversation.platform
+            );
+          }
         })
-      }).catch(() => {});
+        .catch((err) => {
+          triggerToast(
+            'Lỗi kết nối máy chủ',
+            err.message,
+            activeConversation.platform
+          );
+        });
     }
+
 
     if (!customPayload) {
       setMessageInput('');
