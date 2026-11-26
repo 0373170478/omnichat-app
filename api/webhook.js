@@ -148,8 +148,23 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: String(recipientPsid), message: text }),
           });
-          const zaloData = await zaloRes.json();
-          return res.status(200).json({ ok: zaloRes.ok && !zaloData.error, data: zaloData });
+          const rawText = await zaloRes.text();
+          let zaloData = {};
+          try {
+            zaloData = JSON.parse(rawText);
+          } catch {
+            return res.status(400).json({
+              ok: false,
+              error: 'Đường hầm Cloudflare Zalo không phản hồi (có thể cửa sổ cloudflared.exe trên máy tính đã tắt hoặc đổi link mới).',
+            });
+          }
+          if (!zaloRes.ok || zaloData.error) {
+            return res.status(400).json({
+              ok: false,
+              error: zaloData.error || 'Trạm Cầu Nối Zalo trên máy tính từ chối gửi tin.',
+            });
+          }
+          return res.status(200).json({ ok: true, data: zaloData });
         }
 
         const fbRes = await fetch(
