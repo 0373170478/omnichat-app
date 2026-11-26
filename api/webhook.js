@@ -248,14 +248,13 @@ export default async function handler(req, res) {
             (imageUrl ? '' : '[Khách gửi tệp đính kèm / nhãn dán]');
 
           let senderName = `Khách Facebook (${senderPsid.slice(-4)})`;
-          let senderAvatar =
-            'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop&crop=faces';
+          let senderAvatar = '';
 
           const token = await redisCommand(['HGET', 'omnichat:page_tokens', pageId]);
           if (token) {
             try {
               const profileRes = await fetch(
-                `https://graph.facebook.com/v21.0/${senderPsid}?fields=first_name,last_name,name,profile_pic&access_token=${encodeURIComponent(
+                `https://graph.facebook.com/v21.0/${senderPsid}?fields=first_name,last_name,name,profile_pic,picture.type(large)&access_token=${encodeURIComponent(
                   token
                 )}`
               );
@@ -264,8 +263,14 @@ export default async function handler(req, res) {
               else if (profile.first_name || profile.last_name) {
                 senderName = `${profile.last_name || ''} ${profile.first_name || ''}`.trim();
               }
-              if (profile.profile_pic) senderAvatar = profile.profile_pic;
-            } catch (e) {}
+              // Ưu tiên lấy URL ảnh đại diện độ phân giải cao từ Graph API
+              senderAvatar =
+                profile.picture?.data?.url ||
+                profile.profile_pic ||
+                `https://graph.facebook.com/v21.0/${senderPsid}/picture?type=large&access_token=${encodeURIComponent(token)}`;
+            } catch (e) {
+              senderAvatar = `https://graph.facebook.com/v21.0/${senderPsid}/picture?type=large&access_token=${encodeURIComponent(token)}`;
+            }
           }
 
           const newEvent = {
