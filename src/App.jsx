@@ -367,6 +367,33 @@ export default function App() {
   // --- ĐỒNG BỘ TIN NHẮN THẬT TỪ BACKEND (/api/webhook?action=poll) ---
   const processedWebhookIdsRef = useRef(new Set());
 
+  // Tự động đồng bộ lại toàn bộ Page Access Token & Zalo Bridge URL lên Redis mỗi khi tải trang
+  useEffect(() => {
+    const pagesToSync = fanpages
+      .filter((f) => f.connected && f.pageId && f.accessToken)
+      .map((f) => ({
+        pageId: String(f.pageId),
+        platform: 'facebook',
+        accessToken: f.accessToken
+      }));
+
+    if (apiConfigs?.zalo?.accessToken) {
+      pagesToSync.push({
+        pageId: 'zalo_personal_main',
+        platform: 'zalo',
+        accessToken: apiConfigs.zalo.accessToken
+      });
+    }
+
+    if (pagesToSync.length > 0) {
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'register_pages', pages: pagesToSync })
+      }).catch(() => {});
+    }
+  }, [fanpages, apiConfigs?.zalo?.accessToken]);
+
   // Nạp sẵn ID các tin nhắn đã lưu trong localStorage để không bao giờ lặp lại khi nhấn F5
   useEffect(() => {
     conversations.forEach((c) => {
@@ -710,6 +737,11 @@ export default function App() {
           f.name === activeConversation.channelName
       );
       const fallbackConfig = apiConfigs[activeConversation.platform];
+      const tokenToSend =
+        matchedPage?.accessToken ||
+        (activeConversation.platform === 'zalo' ? zaloBridgeUrlInput.trim() : '') ||
+        fallbackConfig?.accessToken ||
+        '';
 
       fetch('/api/webhook', {
         method: 'POST',
@@ -717,18 +749,18 @@ export default function App() {
         body: JSON.stringify({
           action: 'send_reply',
           platform: activeConversation.platform,
-          pageId: matchedPage?.pageId || activeConversation.pageId,
-          pageAccessToken: matchedPage?.accessToken || fallbackConfig?.accessToken,
-          recipientPsid: String(activeConversation.platformUserId),
+          pageId: matchedPage?.pageId || activeConversation.pageId || 'zalo_personal_main',
+          pageAccessToken: tokenToSend,
+          recipientPsid: String(activeConversation.platformUserId || activeConversation.name),
           text: textToSend
         })
       })
-        .then((r) => r.json())
-        .then((resData) => {
-          if (!resData.ok) {
+        .then(async (r) => {
+          const resData = await r.json().catch(() => ({}));
+          if (!r.ok || !resData.ok) {
             triggerToast(
-              'Không gửi được tin nhắn đi',
-              resData.error || 'Nền tảng từ chối gửi tin nhắn này.',
+              `Không gửi được tin ra ${activeConversation.platform.toUpperCase()}`,
+              resData.error || 'Vui lòng kiểm tra lại Token Fanpage hoặc Link Cloudflare Tunnel Zalo.',
               activeConversation.platform
             );
           }
