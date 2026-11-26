@@ -37,6 +37,16 @@ export default async function handler(req, res) {
     }
     return res.status(403).send('Verify token không khớp');
   }
+// 1.5. LẤY ẢNH MÃ QR & TRẠNG THÁI ZALO CÁ NHÂN CHO GIAO DIỆN WEB
+  if (req.method === 'GET' && req.query.action === 'zalo_qr') {
+    const qrData = await redisCommand(['GET', 'omnichat:zalo_qr_base64']);
+    const status = (await redisCommand(['GET', 'omnichat:zalo_status'])) || 'waiting_qr';
+    return res.status(200).json({
+      ok: true,
+      status, // 'waiting_qr' | 'connected'
+      qrImage: qrData || null,
+    });
+  }
 
   // 2. POLLING TIN NHẮN CHO GIAO DIỆN WEB
   if (req.method === 'GET' && req.query.action === 'poll') {
@@ -63,6 +73,16 @@ export default async function handler(req, res) {
   // 3. XỬ LÝ POST (LƯU TOKEN, GỬI TIN ĐI, NHẬN WEBHOOK)
   if (req.method === 'POST') {
     const body = req.body || {};
+// A0. Trạm Playwright đẩy ảnh mã QR Zalo Web & trạng thái đăng nhập lên Redis
+    if (body.action === 'update_zalo_qr') {
+      if (body.qrImage) {
+        await redisCommand(['SET', 'omnichat:zalo_qr_base64', body.qrImage, 'EX', '120']);
+      }
+      if (body.status) {
+        await redisCommand(['SET', 'omnichat:zalo_status', body.status]);
+      }
+      return res.status(200).json({ ok: true });
+    }
 
     // A. Lưu Page Access Token vào Redis
     if (body.action === 'register_pages' && Array.isArray(body.pages)) {
