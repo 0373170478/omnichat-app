@@ -20,19 +20,12 @@ import {
   Tag,
   Download,
   Bell,
-  Zap,
   RefreshCw,
-  ShieldCheck,
   Sparkles,
-  MoreHorizontal,
-  Copy,
-  CheckCircle2,
-  Settings,
-  Key,
   Code2,
-  Terminal,
   Trash2,
-  Power
+  Power,
+  Settings
 } from 'lucide-react';
 
 // --- BIỂU TƯỢNG NỀN TẢNG ---
@@ -299,8 +292,7 @@ export default function App() {
   const [apiConfigs, setApiConfigs] = useState(() => {
     try {
       const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
-      const parsed = saved ? JSON.parse(saved) : INITIAL_API_CONFIGS;
-      return parsed;
+      return saved ? JSON.parse(saved) : INITIAL_API_CONFIGS;
     } catch {
       return INITIAL_API_CONFIGS;
     }
@@ -335,10 +327,8 @@ export default function App() {
   const [apiTestResult, setApiTestResult] = useState({});
 
   const [settingsSearch, setSettingsSearch] = useState('');
-  const [fanpageSearch, setFanpageSearch] = useState('');
-  const [fanpageStatusFilter, setFanpageStatusFilter] = useState('all');
-  const [selectedFanpageIds, setSelectedFanpageIds] = useState([]);
-  const [openRowMenuId, setOpenRowMenuId] = useState(null);
+  const [fanpageSearch] = useState('');
+  const [fanpageStatusFilter] = useState('all');
 
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [connectMode, setConnectMode] = useState('personal');
@@ -353,13 +343,9 @@ export default function App() {
   const [manualPage, setManualPage] = useState({ name: '', username: '', pageId: '' });
   const [availablePagesList, setAvailablePagesList] = useState(DISCOVERABLE_FACEBOOK_PAGES);
 
-  const [capiModalPage, setCapiModalPage] = useState(null);
-  const [pixelIdInput, setPixelIdInput] = useState('');
   const [tokenDetailPage, setTokenDetailPage] = useState(null);
-
   const [showApiCodeDrawer, setShowApiCodeDrawer] = useState(false);
-  const [activeCodeTab, setActiveCodeTab] = useState('frontend');
-  const [copiedCode, setCopiedCode] = useState(false);
+  const [activeCodeTab] = useState('frontend');
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -428,13 +414,13 @@ export default function App() {
           processedWebhookIdsRef.current.add(evId);
 
           const evPlatform = ev.platform || 'facebook';
-          const evPageId = String(ev.pageId || (evPlatform === 'zalo' ? 'zalo_personal_main' : 'unknown_page'));
+          const evPageId = String(
+            ev.pageId || (evPlatform === 'zalo' ? 'zalo_personal_main' : 'unknown_page')
+          );
           const evSenderId = String(ev.senderPsid || '').trim();
           if (!evSenderId) return;
 
-          const matchedPage = fanpages.find(
-            (f) => String(f.pageId) === evPageId
-          );
+          const matchedPage = fanpages.find((f) => String(f.pageId) === evPageId);
 
           const channelName = matchedPage
             ? matchedPage.name
@@ -460,7 +446,6 @@ export default function App() {
             timestamp: nowTime
           };
 
-          // Khóa định danh hội thoại duy nhất: platform::pageId::senderPsid
           const uniqueConvKey = `${evPlatform}::${evPageId}::${evSenderId}`;
 
           setConversations((prev) => {
@@ -477,7 +462,6 @@ export default function App() {
               const target = updated[idx];
               updated.splice(idx, 1);
 
-              // Chống trùng lặp tin nhắn bên trong cùng hội thoại
               const alreadyHasMsg = target.messages.some(
                 (m) =>
                   String(m.id) === evId ||
@@ -491,11 +475,16 @@ export default function App() {
                 ? target.messages
                 : [...target.messages, incomingMsg];
 
+              const resolvedName =
+                ev.senderName && !ev.senderName.startsWith('Khách Facebook (')
+                  ? ev.senderName
+                  : target.name || ev.senderName;
+
               return [
                 {
                   ...target,
                   id: uniqueConvKey,
-                  name: ev.senderName || target.name,
+                  name: resolvedName,
                   avatar: ev.senderAvatar || target.avatar,
                   pageId: evPageId,
                   channelName,
@@ -679,12 +668,28 @@ export default function App() {
     inputRef.current?.focus();
   };
 
+  const updateMessageDeliveryStatus = (convId, msgId, status, errorReason = '') => {
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv.id !== convId) return conv;
+        return {
+          ...conv,
+          messages: conv.messages.map((m) =>
+            m.id === msgId ? { ...m, deliveryStatus: status, errorReason } : m
+          )
+        };
+      })
+    );
+  };
+
   // --- GỬI TIN NHẮN THẬT RA FACEBOOK / ZALO / TIKTOK ---
   const handleSendMessage = (customPayload = null) => {
     if (!activeConversation) return;
     const textToSend = customPayload ? customPayload.text : messageInput.trim();
     if (!textToSend && !customPayload) return;
 
+    const targetConv = activeConversation;
+    const msgId = 'msg_' + Date.now();
     const nowTime =
       new Date().toLocaleTimeString('vi-VN', {
         hour: '2-digit',
@@ -692,7 +697,7 @@ export default function App() {
       }) + ', Hôm nay';
 
     const newMsg = {
-      id: 'msg_' + Date.now(),
+      id: msgId,
       sender: 'agent',
       agentName: currentUser?.name || 'Quản trị viên',
       type: customPayload?.type || 'text',
@@ -701,12 +706,13 @@ export default function App() {
       fileSize: customPayload?.fileSize,
       imageUrl: customPayload?.imageUrl,
       timestamp: nowTime,
-      status: 'sent'
+      deliveryStatus: 'sending',
+      errorReason: ''
     };
 
     setConversations((prev) =>
       prev.map((conv) => {
-        if (conv.id !== activeConversation.id) return conv;
+        if (conv.id !== targetConv.id) return conv;
         return {
           ...conv,
           unreadCount: 0,
@@ -730,16 +736,16 @@ export default function App() {
       })
     );
 
-    if (['facebook', 'zalo', 'tiktok'].includes(activeConversation.platform) && textToSend) {
+    if (['facebook', 'zalo', 'tiktok'].includes(targetConv.platform) && textToSend) {
       const matchedPage = fanpages.find(
         (f) =>
-          String(f.pageId) === String(activeConversation.pageId) ||
-          f.name === activeConversation.channelName
+          String(f.pageId) === String(targetConv.pageId) ||
+          f.name === targetConv.channelName
       );
-      const fallbackConfig = apiConfigs[activeConversation.platform];
+      const fallbackConfig = apiConfigs[targetConv.platform];
       const tokenToSend =
         matchedPage?.accessToken ||
-        (activeConversation.platform === 'zalo' ? zaloBridgeUrlInput.trim() : '') ||
+        (targetConv.platform === 'zalo' ? zaloBridgeUrlInput.trim() : '') ||
         fallbackConfig?.accessToken ||
         '';
 
@@ -748,26 +754,35 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'send_reply',
-          platform: activeConversation.platform,
-          pageId: matchedPage?.pageId || activeConversation.pageId || 'zalo_personal_main',
+          platform: targetConv.platform,
+          pageId: matchedPage?.pageId || targetConv.pageId || 'zalo_personal_main',
           pageAccessToken: tokenToSend,
-          recipientPsid: String(activeConversation.platformUserId || activeConversation.name),
+          recipientPsid: String(targetConv.platformUserId || targetConv.name),
           text: textToSend
         })
       })
         .then(async (r) => {
           const resData = await r.json().catch(() => ({}));
-          if (!r.ok || !resData.ok) {
+          if (r.ok && resData.ok) {
+            updateMessageDeliveryStatus(targetConv.id, msgId, 'sent', '');
+          } else {
+            const errMsg =
+              resData.error ||
+              'Vui lòng kiểm tra lại Token Fanpage hoặc Link Cloudflare Tunnel Zalo.';
+            updateMessageDeliveryStatus(targetConv.id, msgId, 'failed', errMsg);
             triggerToast(
-              `Không gửi được tin ra ${activeConversation.platform.toUpperCase()}`,
-              resData.error || 'Vui lòng kiểm tra lại Token Fanpage hoặc Link Cloudflare Tunnel Zalo.',
-              activeConversation.platform
+              `Không gửi được tin ra ${targetConv.platform.toUpperCase()}`,
+              errMsg,
+              targetConv.platform
             );
           }
         })
         .catch((err) => {
-          triggerToast('Lỗi kết nối máy chủ', err.message, activeConversation.platform);
+          updateMessageDeliveryStatus(targetConv.id, msgId, 'failed', err.message);
+          triggerToast('Lỗi kết nối máy chủ', err.message, targetConv.platform);
         });
+    } else {
+      updateMessageDeliveryStatus(targetConv.id, msgId, 'sent', '');
     }
 
     if (!customPayload) {
@@ -856,7 +871,11 @@ export default function App() {
         pages: [{ pageId: 'zalo_personal_main', platform: 'zalo', accessToken: cleanUrl }]
       })
     }).catch(() => {});
-    triggerToast('Đã lưu Link Cầu Nối Zalo', 'Hệ thống sẵn sàng gửi tin nhắn từ web ra Zalo Cá Nhân!', 'zalo');
+    triggerToast(
+      'Đã lưu Link Cầu Nối Zalo',
+      'Hệ thống sẵn sàng gửi tin nhắn từ web ra Zalo Cá Nhân!',
+      'zalo'
+    );
   };
 
   // Dọn sạch tin nhắn cũ bị trùng/nhầm kênh trên cả Redis và trình duyệt
@@ -1011,7 +1030,8 @@ export default function App() {
         : `@${manualPage.username.trim()}`
       : `@${manualPage.name.toLowerCase().replace(/\s+/g, '')}`;
     const newId =
-      manualPage.pageId.trim() || String(Math.floor(100000000000000 + Math.random() * 900000000000000));
+      manualPage.pageId.trim() ||
+      String(Math.floor(100000000000000 + Math.random() * 900000000000000));
 
     const item = {
       pageId: newId,
@@ -1082,7 +1102,6 @@ export default function App() {
         return updated;
       });
 
-      // Lưu Page Access Token thật lên Upstash Redis
       fetch('/api/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1106,75 +1125,9 @@ export default function App() {
     }, 600);
   };
 
-  const handleToggleMessengerCall = (pageId) => {
-    setFanpages((prev) =>
-      prev.map((fp) => {
-        if (fp.id !== pageId) return fp;
-        const nextVal = !fp.messengerCallEnabled;
-        triggerToast(
-          nextVal ? 'Đã bật gọi Messenger' : 'Đã tắt gọi Messenger',
-          `Fanpage ${fp.name} đã được cập nhật cấu hình cuộc gọi.`,
-          'facebook'
-        );
-        return { ...fp, messengerCallEnabled: nextVal, lastUpdated: 'Vừa xong' };
-      })
-    );
-  };
-
-  const handleOpenCapiModal = (fp) => {
-    setCapiModalPage(fp);
-    setPixelIdInput(fp.pixelId || '849201948271645');
-  };
-
-  const handleSaveCapiGrant = (e) => {
-    e.preventDefault();
-    if (!capiModalPage) return;
-    setFanpages((prev) =>
-      prev.map((fp) =>
-        fp.id === capiModalPage.id
-          ? {
-              ...fp,
-              capiGranted: true,
-              pixelId: pixelIdInput.trim() || '849201948271645',
-              lastUpdated: 'Vừa xong'
-            }
-          : fp
-      )
-    );
-    triggerToast(
-      'Đã cấp quyền Conversions API (CAPI)',
-      `Ghi nhận chuyển đổi mua hàng từ Messenger cho ${capiModalPage.name}.`,
-      'facebook'
-    );
-    setCapiModalPage(null);
-  };
-
-  const handleTogglePageConnection = (id) => {
-    setFanpages((prev) =>
-      prev.map((fp) => {
-        if (fp.id !== id) return fp;
-        const nextConn = !fp.connected;
-        triggerToast(
-          nextConn ? 'Đã khôi phục kết nối Webhook' : 'Đã tạm ngắt kết nối Fanpage',
-          fp.name,
-          'facebook'
-        );
-        return { ...fp, connected: nextConn, lastUpdated: 'Vừa xong' };
-      })
-    );
-    setOpenRowMenuId(null);
-  };
-
   const handleRemoveFanpage = (id) => {
     setFanpages((prev) => prev.filter((fp) => fp.id !== id));
-    setOpenRowMenuId(null);
     triggerToast('Đã gỡ tích hợp Fanpage', 'Trang đã được xóa khỏi danh sách quản lý.');
-  };
-
-  const handleCopyCode = (code) => {
-    navigator.clipboard?.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   // ==================== MÀN HÌNH ĐĂNG NHẬP BẢO MẬT ====================
@@ -1773,6 +1726,22 @@ export default function App() {
                             </div>
                           )}
                         </div>
+
+                        {isAgent && (
+                          <div className="mt-1 text-[10.5px]">
+                            {msg.deliveryStatus === 'sending' && (
+                              <span className="text-slate-400">Đang gửi...</span>
+                            )}
+                            {msg.deliveryStatus === 'sent' && (
+                              <span className="text-emerald-600 font-medium">✓ Đã gửi</span>
+                            )}
+                            {msg.deliveryStatus === 'failed' && (
+                              <span className="text-rose-600 font-semibold">
+                                ✕ Chưa gửi được ({msg.errorReason || 'Lỗi gửi tin'})
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -2156,7 +2125,8 @@ export default function App() {
                         {filteredFanpages.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="py-10 text-center text-xs text-slate-400">
-                              Chưa có Fanpage nào được kết nối. Bấm nút <strong>"+ Thêm fanpage"</strong> ở góc trên để kết nối tài khoản Facebook của bạn.
+                              Chưa có Fanpage nào được kết nối. Bấm nút{' '}
+                              <strong>"+ Thêm fanpage"</strong> ở góc trên để kết nối tài khoản Facebook của bạn.
                             </td>
                           </tr>
                         ) : (
@@ -2297,15 +2267,18 @@ export default function App() {
                         Hướng dẫn đăng nhập Zalo Cá Nhân:
                       </h3>
                       <ol className="list-decimal pl-4 space-y-2 leading-relaxed">
-                        <li>Khởi động <strong>node bridge.mjs</strong> trên máy tính.</li>
-                        <li>Mở ứng dụng <strong>Zalo trên điện thoại</strong> và quét mã QR.</li>
+                        <li>
+                          Khởi động <strong>node bridge.mjs</strong> trên máy tính.
+                        </li>
+                        <li>
+                          Mở ứng dụng <strong>Zalo trên điện thoại</strong> và quét mã QR.
+                        </li>
                         <li>Sau khi đăng nhập, tin nhắn sẽ tự động đồng bộ sau 3 giây.</li>
                       </ol>
                     </div>
                   </div>
                 )}
 
-                {/* Form cấu hình Link Cloudflare Tunnel để gửi phản hồi 2 chiều */}
                 <form
                   onSubmit={handleSaveZaloBridgeUrl}
                   className="p-5 rounded-xl border border-slate-200 bg-white space-y-3 text-xs"
@@ -2314,7 +2287,10 @@ export default function App() {
                     Cấu hình đường hầm gửi tin phản hồi (Cloudflare Tunnel URL)
                   </h3>
                   <p className="text-slate-500">
-                    Dán đường link nhận được từ lệnh <code>cloudflared.exe tunnel --url http://localhost:3456</code> kèm đuôi <strong>/send</strong> (Ví dụ: <code>https://abc-xyz.trycloudflare.com/send</code>):
+                    Dán đường link nhận được từ lệnh{' '}
+                    <code>cloudflared.exe tunnel --url http://localhost:3456</code> kèm đuôi{' '}
+                    <strong>/send</strong> (Ví dụ:{' '}
+                    <code>https://abc-xyz.trycloudflare.com/send</code>):
                   </p>
                   <div className="flex gap-2">
                     <input
@@ -2430,7 +2406,11 @@ export default function App() {
                       Đăng nhập Facebook Cá nhân để lấy danh sách Fanpage thật
                     </h4>
                     <p className="text-slate-600 leading-relaxed">
-                      Hệ thống sẽ gọi endpoint <code className="bg-white px-1 py-0.5 rounded border">GET /v21.0/me/accounts</code> để đồng bộ toàn bộ Fanpage bạn đang quản trị.
+                      Hệ thống sẽ gọi endpoint{' '}
+                      <code className="bg-white px-1 py-0.5 rounded border">
+                        GET /v21.0/me/accounts
+                      </code>{' '}
+                      để đồng bộ toàn bộ Fanpage bạn đang quản trị.
                     </p>
                   </div>
 
@@ -2591,7 +2571,9 @@ export default function App() {
               {oauthStep === 3 && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-3">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-600 shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <Check className="w-5 h-5" />
+                    </div>
                     <div>
                       <h4 className="font-bold text-emerald-900 text-sm">
                         Tích hợp Fanpage & Đăng ký Webhook hoàn tất!
