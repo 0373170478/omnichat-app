@@ -419,7 +419,30 @@ export default function App() {
   // Mặc định mở màn hình 'tools' (Cài đặt -> Tích hợp -> Facebook) đúng theo ảnh người dùng gửi
   const [activeNav, setActiveNav] = useState('tools'); // 'messages' | 'orders' | 'live' | 'customers' | 'analytics' | 'ai' | 'tools'
   const [settingsSubMenu, setSettingsSubMenu] = useState('facebook');
+// State quản lý mã QR Zalo Cá Nhân (Zalo Web Bridge)
+  const [zaloBridgeState, setZaloBridgeState] = useState({
+    status: 'waiting_qr',
+    qrImage: null,
+  });
 
+  useEffect(() => {
+    if (activeNav !== 'tools' || settingsSubMenu !== 'zalo_personal') return;
+    const fetchZaloQr = async () => {
+      try {
+        const res = await fetch('/api/webhook?action=zalo_qr');
+        const data = await res.json();
+        if (data.ok) {
+          setZaloBridgeState({
+            status: data.status || 'waiting_qr',
+            qrImage: data.qrImage || null,
+          });
+        }
+      } catch (e) {}
+    };
+    fetchZaloQr();
+    const timer = setInterval(fetchZaloQr, 3000);
+    return () => clearInterval(timer);
+  }, [activeNav, settingsSubMenu]);
   const [fanpages, setFanpages] = useState(() => {
     try {
       const saved = localStorage.getItem(FANPAGES_STORAGE_KEY);
@@ -2737,6 +2760,95 @@ export default function App() {
                     </table>
                   </div>
                 </div>
+              </div>
+            </section>
+          ) : settingsSubMenu === 'zalo_personal' ? (
+            <section className="flex-1 overflow-y-auto p-6 bg-white">
+              <div className="max-w-3xl mx-auto space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-lg bg-[#0068FF] text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                      Zalo
+                    </div>
+                    <div>
+                      <h1 className="text-lg font-bold text-slate-900">
+                        Zalo Cá Nhân (Zalo Web Bridge)
+                      </h1>
+                      <p className="text-xs text-slate-500">
+                        Quét mã QR trực tiếp để gộp tin nhắn Zalo Cá Nhân vào Hộp thư chung
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      zaloBridgeState.status === 'connected'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}
+                  >
+                    {zaloBridgeState.status === 'connected'
+                      ? '● Đã kết nối Zalo Web'
+                      : '● Đang chờ quét mã QR'}
+                  </span>
+                </div>
+
+                {zaloBridgeState.status === 'connected' ? (
+                  <div className="p-6 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-emerald-900 text-sm">
+                        Tài khoản Zalo Cá Nhân đang đồng bộ 24/24!
+                      </h3>
+                      <p className="text-xs text-emerald-700">
+                        Mọi tin nhắn mới từ Zalo sẽ tự động hiển thị trong tab Tin nhắn cùng với Facebook Messenger.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveNav('messages')}
+                      className="px-4 py-2 rounded-lg bg-[#0068FF] text-white text-xs font-semibold hover:bg-blue-600 shadow-xs"
+                    >
+                      Mở Hộp thư ngay →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-56 h-56 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center p-3 shrink-0">
+                      {zaloBridgeState.qrImage ? (
+                        <img
+                          src={zaloBridgeState.qrImage}
+                          alt="Mã QR Zalo Web"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-center space-y-2 p-3">
+                          <RefreshCw className="w-6 h-6 text-[#0068FF] animate-spin mx-auto" />
+                          <p className="text-[11px] text-slate-500">
+                            Đang chờ Trạm Cầu Nối gửi mã QR từ chat.zalo.me...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 text-xs text-slate-600">
+                      <h3 className="font-bold text-slate-900 text-sm">
+                        Hướng dẫn đăng nhập Zalo Cá Nhân:
+                      </h3>
+                      <ol className="list-decimal pl-4 space-y-2 leading-relaxed">
+                        <li>
+                          Khởi động <strong>Trạm Cầu Nối Zalo Web</strong> trên máy tính.
+                        </li>
+                        <li>
+                          Mở ứng dụng <strong>Zalo trên điện thoại</strong> (nên dùng nick Zalo CSKH riêng).
+                        </li>
+                        <li>
+                          Bấm biểu tượng <strong>Quét mã QR</strong> ở góc trên bên phải màn hình Zalo và hướng camera vào khung mã bên cạnh.
+                        </li>
+                        <li>
+                          Bấm <strong>Đăng nhập</strong> trên điện thoại — khung chat sẽ tự động đồng bộ sau 3 giây.
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           ) : (
