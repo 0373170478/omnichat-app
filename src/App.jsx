@@ -80,8 +80,16 @@ const PlatformBadge = ({ platform, size = 'sm' }) => {
 
   return null;
 };
-
 // --- COMPONENT HIỂN THỊ AVATAR THÔNG MINH (TỰ XỬ LÝ LỖI LINK ẢNH & CHỮ CÁI TÊN) ---
+const AVATAR_GRADIENTS = [
+  'from-blue-500 to-indigo-600',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-purple-500 to-pink-600',
+  'from-cyan-500 to-blue-600',
+  'from-rose-500 to-red-600',
+];
+
 const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
   const [imgError, setImgError] = useState(false);
 
@@ -90,28 +98,29 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
   }, [src]);
 
   const initials = useMemo(() => {
-    if (!name) return 'KH';
-    const parts = String(name).trim().split(/\s+/);
+    const cleanName = String(name || '').trim();
+    if (!cleanName) return 'KH';
+    const parts = cleanName.split(/\s+/);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [name]);
 
-  const bgColors = [
-    'from-blue-500 to-indigo-600',
-    'from-emerald-500 to-teal-600',
-    'from-amber-500 to-orange-600',
-    'from-purple-500 to-pink-600',
-    'from-cyan-500 to-blue-600',
-    'from-rose-500 to-red-600'
-  ];
-  const colorIdx = name
-    ? name.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % bgColors.length
-    : 0;
+  const colorClass = useMemo(() => {
+    if (!name) return AVATAR_GRADIENTS[0];
+    const sum = String(name)
+      .split('')
+      .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
+  }, [name]);
 
-  if (src && !imgError && !src.startsWith('blob:')) {
+  const cleanSrc = typeof src === 'string' ? src.trim() : '';
+  const canRenderImg =
+    Boolean(cleanSrc) && !imgError && !cleanSrc.startsWith('blob:');
+
+  if (canRenderImg) {
     return (
       <img
-        src={src}
+        src={cleanSrc}
         alt={name || 'Avatar'}
         referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
@@ -122,7 +131,8 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
 
   return (
     <div
-      className={`${className} rounded-full bg-gradient-to-br ${bgColors[colorIdx]} text-white font-bold flex items-center justify-center border border-white shadow-2xs shrink-0 text-xs`}
+      title={name || 'Khách hàng'}
+      className={`${className} rounded-full bg-gradient-to-br ${colorClass} text-white font-bold flex items-center justify-center border border-white shadow-2xs shrink-0 select-none text-xs`}
     >
       {initials}
     </div>
@@ -424,18 +434,16 @@ export default function App() {
         if (newEvents.length === 0) return;
 
         newEvents.reverse().forEach((ev) => {
-          const evId = String(ev.id);
-          processedWebhookIdsRef.current.add(evId);
+          processedWebhookIdsRef.current.add(ev.id);
 
           const evPlatform = ev.platform || 'facebook';
-          const evPageId = String(ev.pageId || (evPlatform === 'zalo' ? 'zalo_personal_main' : 'unknown_page'));
-          const evSenderId = String(ev.senderPsid || '').trim();
-          if (!evSenderId) return;
+          const evPageId = String(ev.pageId || '');
+          const evSenderId = String(ev.senderPsid || ev.senderId || '');
+          const incomingAvatar = ev.senderAvatar || ev.avatar || '';
 
           const matchedPage = fanpages.find(
-            (f) => String(f.pageId) === evPageId
+            (f) => evPageId && String(f.pageId) === evPageId
           );
-
           const channelName = matchedPage
             ? matchedPage.name
             : evPlatform === 'zalo'
@@ -445,20 +453,81 @@ export default function App() {
             : 'Fanpage Facebook';
 
           const nowTime =
-            new Date(ev.timestamp || Date.now()).toLocaleTimeString('vi-VN', {
+            new Date().toLocaleTimeString('vi-VN', {
               hour: '2-digit',
-              minute: '2-digit'
+              minute: '2-digit',
             }) + ', Hôm nay';
 
           const incomingMsg = {
-            id: evId,
+            id: ev.id,
             sender: 'customer',
-            senderName: ev.senderName,
-            type: ev.type || (ev.imageUrl ? 'image' : 'text'),
+            senderName: ev.senderName || 'Khách hàng',
+            type: ev.type || 'text',
             text: ev.text || '',
-            imageUrl: ev.imageUrl || null,
-            timestamp: nowTime
+            imageUrl: ev.imageUrl || '',
+            timestamp: nowTime,
           };
+
+          setConversations((prev) => {
+            const idx = prev.findIndex(
+              (c) =>
+                c.platform === evPlatform &&
+                String(c.platformUserId) === evSenderId &&
+                String(c.pageId || '') === evPageId
+            );
+
+            if (idx !== -1) {
+              const updated = [...prev];
+              const target = updated[idx];
+              updated.splice(idx, 1);
+              return [
+                {
+                  ...target,
+                  name: ev.senderName || target.name,
+                  avatar: incomingAvatar || target.avatar,
+                  pageId: evPageId || String(target.pageId || ''),
+                  channelName,
+                  lastTime: 'Vừa xong',
+                  unreadCount:
+                    target.id === selectedId ? 0 : target.unreadCount + 1,
+                  messages: [...target.messages, incomingMsg],
+                },
+                ...updated,
+              ];
+            }
+
+            return [
+              {
+                id: `${evPlatform}_${evPageId}_${evSenderId}`,
+                name: ev.senderName || 'Khách hàng mới',
+                avatar: incomingAvatar,
+                platform: evPlatform,
+                pageId: evPageId,
+                channelName,
+                platformUserId: evSenderId,
+                phone: 'Chưa cập nhật',
+                email: '',
+                leadStage: 'Mới',
+                unreadCount: 1,
+                lastTime: 'Vừa xong',
+                tags: [
+                  evPlatform === 'zalo' ? 'Zalo Live' : 'Facebook Live',
+                  channelName,
+                ],
+                notes: 'Khách nhắn tin thật qua Webhook.',
+                activities: [],
+                messages: [incomingMsg],
+              },
+              ...prev,
+            ];
+          });
+
+          triggerToast(
+            `Tin nhắn mới từ ${ev.senderName || 'Khách hàng'}`,
+            ev.text || '[Hình ảnh / Tệp đính kèm]',
+            evPlatform
+          );
+        });
 
           // Khóa định danh hội thoại duy nhất: platform::pageId::senderPsid
           const uniqueConvKey = `${evPlatform}::${evPageId}::${evSenderId}`;
