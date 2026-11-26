@@ -2,12 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   MessageSquare,
-  ShoppingBag,
-  Radio,
   Users,
-  BarChart3,
-  Bot,
-  Wrench,
   Send,
   Paperclip,
   Image as ImageIcon,
@@ -15,72 +10,82 @@ import {
   Plus,
   X,
   Check,
-  Phone,
-  Mail,
-  Tag,
-  Download,
-  Bell,
-  Zap,
+  CheckCheck,
+  AlertCircle,
   RefreshCw,
+  Trash2,
+  LogOut,
   ShieldCheck,
-  Sparkles,
-  MoreHorizontal,
+  ExternalLink,
   Copy,
   CheckCircle2,
-  Settings,
-  Key,
-  Code2,
-  Terminal,
-  Trash2,
-  Power
+  Wrench,
+  Clock,
+  Tag,
+  FileText,
+  Download,
 } from 'lucide-react';
 
-// --- BIỂU TƯỢNG NỀN TẢNG ---
-const PlatformBadge = ({ platform, size = 'sm' }) => {
-  const dim = size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-5 h-5' : 'w-7 h-7';
-  const iconDim = size === 'sm' ? 'w-2.5 h-2.5' : size === 'md' ? 'w-3 h-3' : 'w-4 h-4';
+const STAFF_ACCOUNTS = [
+  {
+    username: 'admin',
+    password: '123456',
+    name: 'Nguyễn Nguyên Cường (Admin)',
+    role: 'Quản trị viên',
+  },
+  {
+    username: 'cskh1',
+    password: '123456',
+    name: 'Nhân viên CSKH 01',
+    role: 'Tư vấn viên',
+  },
+  {
+    username: 'cskh2',
+    password: '123456',
+    name: 'Nhân viên CSKH 02',
+    role: 'Tư vấn viên',
+  },
+];
 
-  if (platform === 'facebook') {
-    return (
-      <span
-        title="Facebook Messenger"
-        className={`${dim} rounded-full bg-[#0084FF] text-white flex items-center justify-center ring-2 ring-white shadow-sm shrink-0`}
-      >
-        <svg viewBox="0 0 24 24" fill="currentColor" className={iconDim}>
-          <path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.913 1.454 5.512 3.726 7.21V22l3.405-1.869c.909.252 1.871.388 2.869.388 5.523 0 10-4.145 10-9.259S17.523 2 12 2zm1.008 12.463l-2.548-2.717-4.97 2.717 5.467-5.803 2.61 2.717 4.908-2.717-5.467 5.803z" />
-        </svg>
-      </span>
-    );
-  }
+const INITIAL_FANPAGES = [];
+const INITIAL_CONVERSATIONS = [];
 
-  if (platform === 'zalo') {
-    return (
-      <span
-        title="Zalo Cá Nhân / OA"
-        className={`${dim} rounded-full bg-[#0068FF] text-white flex items-center justify-center ring-2 ring-white shadow-sm shrink-0 font-bold`}
-        style={{ fontSize: size === 'sm' ? '7px' : size === 'md' ? '8px' : '10px' }}
-      >
-        Zalo
-      </span>
-    );
-  }
+const QUICK_REPLIES = [
+  {
+    shortcut: '/chao',
+    title: 'Lời chào khách hàng',
+    content:
+      'Dạ chào Anh/Chị! Cảm ơn Anh/Chị đã nhắn tin cho Fanpage. Em có thể hỗ trợ thông tin gì cho mình hôm nay ạ? 😊',
+  },
+  {
+    shortcut: '/baogia',
+    title: 'Gửi bảng giá & ưu đãi',
+    content:
+      'Dạ em xin gửi Anh/Chị thông tin báo giá và chương trình ưu đãi hiện tại. Anh/Chị tham khảo giúp em nhé! ✨',
+  },
+  {
+    shortcut: '/xin_sdt',
+    title: 'Xin số điện thoại tư vấn',
+    content:
+      'Để hỗ trợ nhanh và chi tiết nhất, Anh/Chị cho em xin số điện thoại liên hệ của mình được không ạ? 📞',
+  },
+  {
+    shortcut: '/camon',
+    title: 'Lời cảm ơn',
+    content:
+      'Dạ em cảm ơn Anh/Chị nhiều ạ. Chúc Anh/Chị một ngày thật nhiều niềm vui! 💙',
+  },
+];
 
-  if (platform === 'tiktok') {
-    return (
-      <span
-        title="TikTok Business"
-        className={`${dim} rounded-full bg-[#111111] text-white flex items-center justify-center ring-2 ring-white shadow-sm shrink-0`}
-      >
-        <svg viewBox="0 0 24 24" fill="currentColor" className={iconDim}>
-          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-        </svg>
-      </span>
-    );
-  }
+const EMOJI_LIST = [
+  '😊', '😍', '🙏', '👍', '❤️', '😂', '🎉', '🔥',
+  '✨', '💬', '📞', '🚗', '✅', '👌', '😄', '🥰',
+];
 
-  return null;
-};
-// --- COMPONENT HIỂN THỊ AVATAR THÔNG MINH (TỰ XỬ LÝ LỖI LINK ẢNH & CHỮ CÁI TÊN) ---
+const STORAGE_KEY = 'omnichat_fb_conversations_v3';
+const FANPAGES_STORAGE_KEY = 'omnichat_fb_fanpages_v3';
+const USER_STORAGE_KEY = 'omnichat_fb_logged_in_user_v3';
+
 const AVATAR_GRADIENTS = [
   'from-blue-500 to-indigo-600',
   'from-emerald-500 to-teal-600',
@@ -90,6 +95,21 @@ const AVATAR_GRADIENTS = [
   'from-rose-500 to-red-600',
 ];
 
+const FacebookBadge = ({ size = 'sm' }) => {
+  const dim = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+  const iconDim = size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3';
+  return (
+    <span
+      title="Facebook Messenger"
+      className={`${dim} rounded-full bg-[#0084FF] text-white flex items-center justify-center ring-2 ring-white shadow-sm shrink-0`}
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" className={iconDim}>
+        <path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.913 1.454 5.512 3.726 7.21V22l3.405-1.869c.909.252 1.871.388 2.869.388 5.523 0 10-4.145 10-9.259S17.523 2 12 2zm1.008 12.463l-2.548-2.717-4.97 2.717 5.467-5.803 2.61 2.717 4.908-2.717-5.467 5.803z" />
+      </svg>
+    </span>
+  );
+};
+
 const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
   const [imgError, setImgError] = useState(false);
 
@@ -98,24 +118,21 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
   }, [src]);
 
   const initials = useMemo(() => {
-    const cleanName = String(name || '').trim();
-    if (!cleanName) return 'KH';
-    const parts = cleanName.split(/\s+/);
+    const clean = String(name || '').trim();
+    if (!clean) return 'FB';
+    const parts = clean.split(/\s+/);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [name]);
 
   const colorClass = useMemo(() => {
-    if (!name) return AVATAR_GRADIENTS[0];
-    const sum = String(name)
-      .split('')
-      .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const str = String(name || 'FB');
+    const sum = str.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
   }, [name]);
 
   const cleanSrc = typeof src === 'string' ? src.trim() : '';
-  const canRenderImg =
-    Boolean(cleanSrc) && !imgError && !cleanSrc.startsWith('blob:');
+  const canRenderImg = Boolean(cleanSrc) && !imgError && !cleanSrc.startsWith('blob:');
 
   if (canRenderImg) {
     return (
@@ -131,7 +148,7 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
 
   return (
     <div
-      title={name || 'Khách hàng'}
+      title={name || 'Khách Facebook'}
       className={`${className} rounded-full bg-gradient-to-br ${colorClass} text-white font-bold flex items-center justify-center border border-white shadow-2xs shrink-0 select-none text-xs`}
     >
       {initials}
@@ -139,96 +156,11 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
   );
 };
 
-// --- KHỞI TẠO SẠCH DỮ LIỆU MẪU (CHỈ HIỂN THỊ DỮ LIỆU THẬT) ---
-const INITIAL_FANPAGES = [];
-const INITIAL_CONVERSATIONS = [];
-const DISCOVERABLE_FACEBOOK_PAGES = [];
-
-// --- TIN NHẮN MẪU (QUICK REPLIES) ---
-const QUICK_REPLIES = [
-  {
-    shortcut: '/chao',
-    title: 'Lời chào chuẩn đa kênh',
-    content: 'Dạ chào Anh/Chị! Cảm ơn Anh/Chị đã liên hệ với hệ thống CSKH. Em có thể hỗ trợ thông tin gì cho mình hôm nay ạ? 😊'
-  },
-  {
-    shortcut: '/baogia',
-    title: 'Gửi bảng giá & ưu đãi tháng',
-    content: 'Dạ em xin gửi Anh/Chị bảng báo giá niêm yết kèm chương trình ưu đãi đặc biệt trong tháng này. Anh/Chị tham khảo giúp em nhé!'
-  },
-  {
-    shortcut: '/diachi',
-    title: 'Địa chỉ Showroom & Giờ làm việc',
-    content: 'Bên em mở cửa từ 08:00 - 19:00 tất cả các ngày trong tuần. Rất hân hạnh được đón tiếp Anh/Chị!'
-  },
-  {
-    shortcut: '/xin_sdt',
-    title: 'Xin số điện thoại tư vấn',
-    content: 'Để bộ phận chuyên viên hỗ trợ nhanh và chính xác nhất, Anh/Chị cho em xin số điện thoại liên hệ của mình được không ạ?'
-  },
-  {
-    shortcut: '/camon',
-    title: 'Lời cảm ơn kết thúc hội thoại',
-    content: 'Chân thành cảm ơn Quý Khách đã tin tưởng và lựa chọn dịch vụ, kính chúc Quý Khách một ngày tốt lành! 💙'
-  }
-];
-
-const INITIAL_API_CONFIGS = {
-  facebook: {
-    name: 'Facebook Messenger API',
-    pageName: 'Kết nối qua Meta Graph API v21.0',
-    endpoint: 'https://graph.facebook.com/v21.0/me/messages',
-    webhookUrl: 'https://omnichat-app-beige.vercel.app/api/webhook',
-    verifyToken: 'omnichat_fb_verify_2026',
-    accessToken: ''
-  },
-  zalo: {
-    name: 'Zalo Cá Nhân (Zalo Web Bridge)',
-    pageName: 'Đồng bộ qua Trạm Cầu Nối Zalo Web',
-    endpoint: 'http://localhost:3456/send',
-    webhookUrl: 'https://omnichat-app-beige.vercel.app/api/webhook?channel=zalo_personal',
-    verifyToken: 'omnichat_zalo_bridge',
-    accessToken: ''
-  },
-  tiktok: {
-    name: 'TikTok Business Messaging API',
-    pageName: 'TikTok Shop / Business',
-    endpoint: 'https://business-api.tiktok.com/open_api/v1.3/im/message/send/',
-    webhookUrl: 'https://omnichat-app-beige.vercel.app/api/webhook?channel=tiktok',
-    verifyToken: 'omnichat_tiktok_biz_key',
-    accessToken: ''
-  }
-};
-
-const STORAGE_KEY = 'omnichannel_inbox_conversations_v2';
-const CONFIG_STORAGE_KEY = 'omnichannel_inbox_api_configs_v2';
-const FANPAGES_STORAGE_KEY = 'omnichannel_facebook_fanpages_v2';
-
-const CODE_SNIPPETS = {
-  frontend: `// Meta Graph API v21.0 OAuth 2.0 Login
-FB.login(function(response) {
-  if (response.authResponse) {
-    const userAccessToken = response.authResponse.accessToken;
-    fetch('https://graph.facebook.com/v21.0/me/accounts?access_token=' + userAccessToken);
-  }
-}, { scope: 'pages_show_list,pages_messaging,pages_manage_metadata,pages_read_engagement' });`,
-  backend: `// Webhook Endpoint: https://omnichat-app-beige.vercel.app/api/webhook
-// Verify Token: omnichat_fb_verify_2026`,
-  webhook: `// Zalo Web Bridge Webhook: https://omnichat-app-beige.vercel.app/api/webhook?channel=zalo_personal`
-};
-
 export default function App() {
-  // --- DANH SÁCH TÀI KHOẢN ĐĂNG NHẬP HỆ THỐNG ---
-  const STAFF_ACCOUNTS = [
-    { username: 'admin', password: '123456', name: 'Nguyễn Nguyên Cường (Admin)', role: 'Quản trị viên' },
-    { username: 'cskh1', password: '123456', name: 'Nhân viên CSKH 01', role: 'Tư vấn viên' },
-    { username: 'cskh2', password: '123456', name: 'Nhân viên CSKH 02', role: 'Tư vấn viên' }
-  ];
-
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('omnichat_logged_in_user_v1');
-      return savedUser ? JSON.parse(savedUser) : null;
+      const saved = localStorage.getItem(USER_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
@@ -237,57 +169,7 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  const handleStaffLogin = (e) => {
-    e.preventDefault();
-    const found = STAFF_ACCOUNTS.find(
-      (acc) =>
-        acc.username.toLowerCase() === loginUsername.trim().toLowerCase() &&
-        acc.password === loginPassword
-    );
-    if (!found) {
-      setLoginError('Tên đăng nhập hoặc mật khẩu không chính xác!');
-      return;
-    }
-    setCurrentUser(found);
-    setLoginError('');
-    localStorage.setItem('omnichat_logged_in_user_v1', JSON.stringify(found));
-  };
-
-  const handleStaffLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('omnichat_logged_in_user_v1');
-  };
-
-  // --- STATE CHÍNH ---
-  const [activeNav, setActiveNav] = useState('messages');
-  const [settingsSubMenu, setSettingsSubMenu] = useState('facebook');
-
-  // State quản lý mã QR & Bridge URL Zalo Cá Nhân
-  const [zaloBridgeState, setZaloBridgeState] = useState({
-    status: 'waiting_qr',
-    qrImage: null
-  });
-  const [zaloBridgeUrlInput, setZaloBridgeUrlInput] = useState('');
-
-  useEffect(() => {
-    if (activeNav !== 'tools' || settingsSubMenu !== 'zalo_personal') return;
-    const fetchZaloQr = async () => {
-      try {
-        const res = await fetch('/api/webhook?action=zalo_qr');
-        const data = await res.json();
-        if (data.ok) {
-          setZaloBridgeState({
-            status: data.status || 'waiting_qr',
-            qrImage: data.qrImage || null
-          });
-        }
-      } catch (e) {}
-    };
-    fetchZaloQr();
-    const timer = setInterval(fetchZaloQr, 3000);
-    return () => clearInterval(timer);
-  }, [activeNav, settingsSubMenu]);
-
+  const [activeNav, setActiveNav] = useState('messages'); // 'messages' | 'customers' | 'tools'
   const [fanpages, setFanpages] = useState(() => {
     try {
       const saved = localStorage.getItem(FANPAGES_STORAGE_KEY);
@@ -306,28 +188,11 @@ export default function App() {
     }
   });
 
-  const [apiConfigs, setApiConfigs] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
-      const parsed = saved ? JSON.parse(saved) : INITIAL_API_CONFIGS;
-      return parsed;
-    } catch {
-      return INITIAL_API_CONFIGS;
-    }
-  });
-
-  useEffect(() => {
-    if (apiConfigs?.zalo?.accessToken && !zaloBridgeUrlInput) {
-      setZaloBridgeUrlInput(apiConfigs.zalo.accessToken);
-    }
-  }, [apiConfigs]);
-
-  const [selectedId, setSelectedId] = useState(null);
-  const [filterTab, setFilterTab] = useState('all');
-  const [platformFilter, setPlatformFilter] = useState('all');
+  const [selectedId, setSelectedId] = useState('');
+  const [filterTab, setFilterTab] = useState('all'); // 'all' | 'unread'
+  const [selectedPageFilter, setSelectedPageFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [chatSubTab, setChatSubTab] = useState('conversation');
   const [messageInput, setMessageInput] = useState('');
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [quickReplyFilter, setQuickReplyFilter] = useState('');
@@ -336,284 +201,37 @@ export default function App() {
   const [newTagText, setNewTagText] = useState('');
 
   const [showRightPanel, setShowRightPanel] = useState(true);
-  const [crmForm, setCrmForm] = useState({ phone: '', email: '', leadStage: 'Mới', notes: '' });
+  const [crmForm, setCrmForm] = useState({
+    phone: '',
+    email: '',
+    leadStage: 'Mới',
+    notes: '',
+  });
   const [crmSavedToast, setCrmSavedToast] = useState(false);
 
-  const [agentOnline, setAgentOnline] = useState(true);
   const [toastNotification, setToastNotification] = useState(null);
-  const [testingApiKey, setTestingApiKey] = useState(null);
-  const [apiTestResult, setApiTestResult] = useState({});
-
-  const [settingsSearch, setSettingsSearch] = useState('');
-  const [fanpageSearch, setFanpageSearch] = useState('');
-  const [fanpageStatusFilter, setFanpageStatusFilter] = useState('all');
-  const [selectedFanpageIds, setSelectedFanpageIds] = useState([]);
-  const [openRowMenuId, setOpenRowMenuId] = useState(null);
-
   const [connectModalOpen, setConnectModalOpen] = useState(false);
-  const [connectMode, setConnectMode] = useState('personal');
-  const [oauthStep, setOauthStep] = useState(1);
-  const [fbPersonalAccount, setFbPersonalAccount] = useState(null);
-  const [customUserToken, setCustomUserToken] = useState('');
-  const [selectedNewPageIds, setSelectedNewPageIds] = useState([]);
   const [isConnectingApi, setIsConnectingApi] = useState(false);
-  const [apiLogs, setApiLogs] = useState([]);
-
-  const [showManualPageForm, setShowManualPageForm] = useState(false);
-  const [manualPage, setManualPage] = useState({ name: '', username: '', pageId: '' });
-  const [availablePagesList, setAvailablePagesList] = useState(DISCOVERABLE_FACEBOOK_PAGES);
-
-  const [capiModalPage, setCapiModalPage] = useState(null);
-  const [pixelIdInput, setPixelIdInput] = useState('');
-  const [tokenDetailPage, setTokenDetailPage] = useState(null);
-
-  const [showApiCodeDrawer, setShowApiCodeDrawer] = useState(false);
-  const [activeCodeTab, setActiveCodeTab] = useState('frontend');
-  const [copiedCode, setCopiedCode] = useState(false);
+  const [discoveredPages, setDiscoveredPages] = useState([]);
+  const [selectedDiscoverIds, setSelectedDiscoverIds] = useState([]);
+  const [customUserToken, setCustomUserToken] = useState('');
+  const [copiedId, setCopiedId] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const imageInputRef = useRef(null);
+  const mediaInputRef = useRef(null);
+  const processedIdsRef = useRef(new Set());
+  const syncedTokenPagesRef = useRef(new Set());
 
-  // --- ĐỒNG BỘ TIN NHẮN THẬT TỪ BACKEND (/api/webhook?action=poll) ---
-  const processedWebhookIdsRef = useRef(new Set());
+  const triggerToast = (title, desc, isError = false) => {
+    setToastNotification({ title, desc, isError });
+    setTimeout(() => {
+      setToastNotification(null);
+    }, 4000);
+  };
 
-  // Tự động đồng bộ lại toàn bộ Page Access Token & Zalo Bridge URL lên Redis mỗi khi tải trang
-  useEffect(() => {
-    const pagesToSync = fanpages
-      .filter((f) => f.connected && f.pageId && f.accessToken)
-      .map((f) => ({
-        pageId: String(f.pageId),
-        platform: 'facebook',
-        accessToken: f.accessToken
-      }));
-
-    if (apiConfigs?.zalo?.accessToken) {
-      pagesToSync.push({
-        pageId: 'zalo_personal_main',
-        platform: 'zalo',
-        accessToken: apiConfigs.zalo.accessToken
-      });
-    }
-
-    if (pagesToSync.length > 0) {
-      fetch('/api/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register_pages', pages: pagesToSync })
-      }).catch(() => {});
-    }
-  }, [fanpages, apiConfigs?.zalo?.accessToken]);
-
-  // Nạp sẵn ID các tin nhắn đã lưu trong localStorage để không bao giờ lặp lại khi nhấn F5
-  useEffect(() => {
-    conversations.forEach((c) => {
-      (c.messages || []).forEach((m) => {
-        if (m.id) processedWebhookIdsRef.current.add(String(m.id));
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    const syncRealMessages = async () => {
-      try {
-        const res = await fetch('/api/webhook?action=poll');
-        const data = await res.json();
-        if (!data.ok || !Array.isArray(data.events)) return;
-
-        // Lọc bỏ tin nhắn đã xử lý hoặc tin nhắn chiều đi (outgoing / isEcho)
-        const newEvents = data.events.filter((ev) => {
-          const evId = String(ev.id || '');
-          if (!evId || processedWebhookIdsRef.current.has(evId)) return false;
-          if (ev.direction === 'outgoing' || ev.isEcho) {
-            processedWebhookIdsRef.current.add(evId);
-            return false;
-          }
-          return true;
-        });
-
-        if (newEvents.length === 0) return;
-
-        newEvents.reverse().forEach((ev) => {
-          processedWebhookIdsRef.current.add(ev.id);
-
-          const evPlatform = ev.platform || 'facebook';
-          const evPageId = String(ev.pageId || '');
-          const evSenderId = String(ev.senderPsid || ev.senderId || '');
-          const incomingAvatar = ev.senderAvatar || ev.avatar || '';
-
-          const matchedPage = fanpages.find(
-            (f) => evPageId && String(f.pageId) === evPageId
-          );
-          const channelName = matchedPage
-            ? matchedPage.name
-            : evPlatform === 'zalo'
-            ? 'Zalo Cá Nhân'
-            : evPlatform === 'tiktok'
-            ? 'TikTok Business'
-            : 'Fanpage Facebook';
-
-          const nowTime =
-            new Date().toLocaleTimeString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            }) + ', Hôm nay';
-
-          const incomingMsg = {
-            id: ev.id,
-            sender: 'customer',
-            senderName: ev.senderName || 'Khách hàng',
-            type: ev.type || 'text',
-            text: ev.text || '',
-            imageUrl: ev.imageUrl || '',
-            timestamp: nowTime,
-          };
-
-          setConversations((prev) => {
-            const idx = prev.findIndex(
-              (c) =>
-                c.platform === evPlatform &&
-                String(c.platformUserId) === evSenderId &&
-                String(c.pageId || '') === evPageId
-            );
-
-            if (idx !== -1) {
-              const updated = [...prev];
-              const target = updated[idx];
-              updated.splice(idx, 1);
-              return [
-                {
-                  ...target,
-                  name: ev.senderName || target.name,
-                  avatar: incomingAvatar || target.avatar,
-                  pageId: evPageId || String(target.pageId || ''),
-                  channelName,
-                  lastTime: 'Vừa xong',
-                  unreadCount:
-                    target.id === selectedId ? 0 : target.unreadCount + 1,
-                  messages: [...target.messages, incomingMsg],
-                },
-                ...updated,
-              ];
-            }
-
-            return [
-              {
-                id: `${evPlatform}_${evPageId}_${evSenderId}`,
-                name: ev.senderName || 'Khách hàng mới',
-                avatar: incomingAvatar,
-                platform: evPlatform,
-                pageId: evPageId,
-                channelName,
-                platformUserId: evSenderId,
-                phone: 'Chưa cập nhật',
-                email: '',
-                leadStage: 'Mới',
-                unreadCount: 1,
-                lastTime: 'Vừa xong',
-                tags: [
-                  evPlatform === 'zalo' ? 'Zalo Live' : 'Facebook Live',
-                  channelName,
-                ],
-                notes: 'Khách nhắn tin thật qua Webhook.',
-                activities: [],
-                messages: [incomingMsg],
-              },
-              ...prev,
-            ];
-          });
-
-          triggerToast(
-            `Tin nhắn mới từ ${ev.senderName || 'Khách hàng'}`,
-            ev.text || '[Hình ảnh / Tệp đính kèm]',
-            evPlatform
-          );
-        });
-
-          // Khóa định danh hội thoại duy nhất: platform::pageId::senderPsid
-          const uniqueConvKey = `${evPlatform}::${evPageId}::${evSenderId}`;
-
-          setConversations((prev) => {
-            const idx = prev.findIndex(
-              (c) =>
-                c.id === uniqueConvKey ||
-                (c.platform === evPlatform &&
-                  String(c.platformUserId) === evSenderId &&
-                  String(c.pageId || '') === evPageId)
-            );
-
-            if (idx !== -1) {
-              const updated = [...prev];
-              const target = updated[idx];
-              updated.splice(idx, 1);
-
-              // Chống trùng lặp tin nhắn bên trong cùng hội thoại
-              const alreadyHasMsg = target.messages.some(
-                (m) =>
-                  String(m.id) === evId ||
-                  (m.sender === 'customer' &&
-                    m.text === incomingMsg.text &&
-                    m.imageUrl === incomingMsg.imageUrl &&
-                    m.timestamp === incomingMsg.timestamp)
-              );
-
-              const nextMessages = alreadyHasMsg
-                ? target.messages
-                : [...target.messages, incomingMsg];
-
-              return [
-                {
-                  ...target,
-                  id: uniqueConvKey,
-                  name: ev.senderName || target.name,
-                  avatar: ev.senderAvatar || target.avatar,
-                  pageId: evPageId,
-                  channelName,
-                  lastTime: 'Vừa xong',
-                  unreadCount:
-                    target.id === selectedId ? 0 : target.unreadCount + (alreadyHasMsg ? 0 : 1),
-                  messages: nextMessages
-                },
-                ...updated
-              ];
-            }
-
-            return [
-              {
-                id: uniqueConvKey,
-                name: ev.senderName || `Khách ${evPlatform.toUpperCase()}`,
-                avatar: ev.senderAvatar || '',
-                platform: evPlatform,
-                pageId: evPageId,
-                channelName,
-                platformUserId: evSenderId,
-                phone: 'Chưa cập nhật',
-                email: '',
-                leadStage: 'Mới',
-                unreadCount: 1,
-                lastTime: 'Vừa xong',
-                tags: [evPlatform === 'zalo' ? 'Zalo Cá Nhân' : 'Facebook Live', channelName],
-                notes: 'Khách hàng đồng bộ tự động qua Webhook.',
-                activities: [],
-                messages: [incomingMsg]
-              },
-              ...prev
-            ];
-          });
-
-          triggerToast(
-            `Tin nhắn mới từ ${ev.senderName}`,
-            ev.text || '[Hình ảnh đính kèm]',
-            evPlatform
-          );
-        });
-      } catch (err) {}
-    };
-
-    syncRealMessages();
-    const timer = setInterval(syncRealMessages, 3500);
-    return () => clearInterval(timer);
-  }, [fanpages, selectedId]);
-
+  // Lưu localStorage
   useEffect(() => {
     try {
       localStorage.setItem(FANPAGES_STORAGE_KEY, JSON.stringify(fanpages));
@@ -626,16 +244,175 @@ export default function App() {
     } catch (e) {}
   }, [conversations]);
 
+  // Tự động đẩy lại Page Access Token đã lưu lên Redis để không phải kết nối lại nhiều lần
   useEffect(() => {
-    try {
-      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(apiConfigs));
-    } catch (e) {}
-  }, [apiConfigs]);
+    if (!currentUser || fanpages.length === 0) return;
+    const validPages = fanpages.filter(
+      (fp) =>
+        fp.connected &&
+        fp.pageId &&
+        fp.accessToken &&
+        !syncedTokenPagesRef.current.has(`${fp.pageId}:${fp.accessToken}`)
+    );
+    if (validPages.length === 0) return;
 
-  const activeConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedId) || conversations[0] || null,
-    [conversations, selectedId]
-  );
+    validPages.forEach((fp) =>
+      syncedTokenPagesRef.current.add(`${fp.pageId}:${fp.accessToken}`)
+    );
+
+    fetch('/api/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'register_pages',
+        pages: validPages.map((fp) => ({
+          pageId: fp.pageId,
+          name: fp.name,
+          accessToken: fp.accessToken,
+        })),
+      }),
+    }).catch(() => {});
+  }, [currentUser, fanpages]);
+
+  // Nạp sẵn các ID tin nhắn đã có để không lặp lại khi tải lại trang
+  useEffect(() => {
+    conversations.forEach((conv) => {
+      (conv.messages || []).forEach((m) => {
+        if (m.id) processedIdsRef.current.add(m.id);
+      });
+    });
+  }, []);
+
+  // Tự động lấy tin nhắn thật từ Facebook Webhook mỗi 3 giây
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const pollFacebookMessages = async () => {
+      try {
+        const res = await fetch('/api/webhook?action=poll');
+        const data = await res.json();
+        if (!data.ok || !Array.isArray(data.events)) return;
+
+        const fbEvents = data.events.filter(
+          (ev) => (ev.platform || 'facebook') === 'facebook' && ev.direction !== 'outgoing'
+        );
+
+        const newEvents = fbEvents.filter((ev) => {
+          if (!ev.id || processedIdsRef.current.has(ev.id)) return false;
+          return true;
+        });
+
+        if (newEvents.length === 0) return;
+
+        newEvents.reverse().forEach((ev) => {
+          processedIdsRef.current.add(ev.id);
+
+          const evPageId = String(ev.pageId || '');
+          const evSenderPsid = String(ev.senderPsid || '');
+          if (!evSenderPsid) return;
+
+          const matchedPage = fanpages.find((f) => String(f.pageId) === evPageId);
+          const channelName = matchedPage?.name || ev.pageName || 'Fanpage Facebook';
+
+          const nowTime =
+            new Date().toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) + ', Hôm nay';
+
+          const incomingMsg = {
+            id: ev.id,
+            sender: 'customer',
+            senderName: ev.senderName || `Khách Facebook (${evSenderPsid.slice(-4)})`,
+            type: ev.type || 'text',
+            text: ev.text || '',
+            imageUrl: ev.imageUrl || '',
+            videoUrl: ev.videoUrl || '',
+            fileName: ev.fileName || '',
+            fileUrl: ev.fileUrl || '',
+            timestamp: nowTime,
+          };
+
+          const convId = `fb_${evPageId || 'page'}_${evSenderPsid}`;
+
+          setConversations((prev) => {
+            const idx = prev.findIndex(
+              (c) =>
+                c.platform === 'facebook' &&
+                String(c.platformUserId) === evSenderPsid &&
+                String(c.pageId || '') === evPageId
+            );
+
+            if (idx !== -1) {
+              const updated = [...prev];
+              const target = updated[idx];
+              const existsMsg = (target.messages || []).some((m) => m.id === incomingMsg.id);
+              if (existsMsg) return prev;
+
+              updated.splice(idx, 1);
+              return [
+                {
+                  ...target,
+                  name: ev.senderName || target.name,
+                  avatar: ev.senderAvatar || target.avatar,
+                  pageId: evPageId || target.pageId || '',
+                  channelName,
+                  lastTime: 'Vừa xong',
+                  unreadCount:
+                    target.id === selectedId && activeNav === 'messages'
+                      ? 0
+                      : (target.unreadCount || 0) + 1,
+                  messages: [...(target.messages || []), incomingMsg],
+                },
+                ...updated,
+              ];
+            }
+
+            return [
+              {
+                id: convId,
+                name: ev.senderName || `Khách Facebook (${evSenderPsid.slice(-4)})`,
+                avatar: ev.senderAvatar || '',
+                platform: 'facebook',
+                pageId: evPageId,
+                channelName,
+                platformUserId: evSenderPsid,
+                phone: 'Chưa cập nhật',
+                email: '',
+                leadStage: 'Mới',
+                unreadCount: 1,
+                lastTime: 'Vừa xong',
+                tags: ['Facebook Messenger', channelName],
+                notes: 'Khách nhắn tin thật từ Facebook Messenger.',
+                messages: [incomingMsg],
+              },
+              ...prev,
+            ];
+          });
+
+          if (!selectedId) {
+            setSelectedId(convId);
+          }
+
+          triggerToast(
+            `Tin nhắn mới từ ${ev.senderName || 'Khách Facebook'}`,
+            ev.text || 'Đã gửi tệp/hình ảnh/video',
+            false
+          );
+        });
+      } catch (e) {}
+    };
+
+    pollFacebookMessages();
+    const timer = setInterval(pollFacebookMessages, 3000);
+    return () => clearInterval(timer);
+  }, [currentUser, fanpages, selectedId, activeNav]);
+
+  const activeConversation = useMemo(() => {
+    return (
+      conversations.find((c) => c.id === selectedId) || conversations[0] || null
+    );
+  }, [conversations, selectedId]);
 
   useEffect(() => {
     if (activeConversation) {
@@ -643,7 +420,7 @@ export default function App() {
         phone: activeConversation.phone || '',
         email: activeConversation.email || '',
         leadStage: activeConversation.leadStage || 'Mới',
-        notes: activeConversation.notes || ''
+        notes: activeConversation.notes || '',
       });
       setIsAddingTag(false);
       setNewTagText('');
@@ -654,65 +431,53 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeConversation?.messages?.length, selectedId]);
 
-  const unreadTotalCount = useMemo(
-    () => conversations.filter((c) => c.unreadCount > 0).length,
-    [conversations]
-  );
-
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
-      if (filterTab === 'unread' && conv.unreadCount === 0) return false;
-      if (platformFilter !== 'all') {
-        if (platformFilter.startsWith('page:')) {
-          const targetPageName = platformFilter.replace('page:', '');
-          if (conv.platform !== 'facebook' || conv.channelName !== targetPageName) return false;
-        } else if (conv.platform !== platformFilter) {
-          return false;
-        }
+      if (filterTab === 'unread' && (conv.unreadCount || 0) === 0) return false;
+      if (selectedPageFilter !== 'all') {
+        if (String(conv.pageId || '') !== String(selectedPageFilter)) return false;
       }
       const q = searchQuery.trim().toLowerCase();
       if (q) {
-        const matchName = conv.name.toLowerCase().includes(q);
-        const matchPhone = (conv.phone || '').toLowerCase().includes(q);
-        const matchLastMsg = conv.messages[conv.messages.length - 1]?.text?.toLowerCase().includes(q);
-        return matchName || matchPhone || matchLastMsg;
-      }
-      return true;
-    });
-  }, [conversations, filterTab, platformFilter, searchQuery]);
-
-  const filteredFanpages = useMemo(() => {
-    return fanpages.filter((fp) => {
-      if (fanpageStatusFilter === 'connected' && !fp.connected) return false;
-      if (fanpageStatusFilter === 'no_capi' && fp.capiGranted) return false;
-      if (fanpageStatusFilter === 'call_enabled' && !fp.messengerCallEnabled) return false;
-
-      const q = fanpageSearch.trim().toLowerCase();
-      if (q) {
+        const lastMsg = conv.messages?.[conv.messages.length - 1];
         return (
-          fp.name.toLowerCase().includes(q) ||
-          fp.username.toLowerCase().includes(q) ||
-          fp.pageId.includes(q)
+          (conv.name || '').toLowerCase().includes(q) ||
+          (conv.phone || '').toLowerCase().includes(q) ||
+          (lastMsg?.text || '').toLowerCase().includes(q)
         );
       }
       return true;
     });
-  }, [fanpages, fanpageSearch, fanpageStatusFilter]);
+  }, [conversations, filterTab, selectedPageFilter, searchQuery]);
 
-  const activeFanpagesCount = useMemo(
-    () => fanpages.filter((fp) => fp.connected).length,
-    [fanpages]
-  );
+  const unreadTotalCount = useMemo(() => {
+    return conversations.filter((c) => (c.unreadCount || 0) > 0).length;
+  }, [conversations]);
 
-  const triggerToast = (title, desc, platform = null) => {
-    setToastNotification({ title, desc, platform });
-    setTimeout(() => {
-      setToastNotification(null);
-    }, 3500);
+  const handleStaffLogin = (e) => {
+    e.preventDefault();
+    const found = STAFF_ACCOUNTS.find(
+      (acc) =>
+        acc.username.toLowerCase() === loginUsername.trim().toLowerCase() &&
+        acc.password === loginPassword
+    );
+    if (!found) {
+      setLoginError('Tên đăng nhập hoặc mật khẩu không chính xác!');
+      return;
+    }
+    setCurrentUser(found);
+    setLoginError('');
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(found));
+  };
+
+  const handleStaffLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const handleSelectConversation = (id) => {
     setSelectedId(id);
+    setActiveNav('messages');
     setConversations((prev) =>
       prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c))
     );
@@ -721,7 +486,6 @@ export default function App() {
   const handleInputChange = (e) => {
     const val = e.target.value;
     setMessageInput(val);
-
     if (val.startsWith('/')) {
       setShowQuickReplies(true);
       setQuickReplyFilter(val.toLowerCase());
@@ -742,138 +506,156 @@ export default function App() {
     );
   }, [quickReplyFilter]);
 
-  const handleSelectQuickReply = (content) => {
-    setMessageInput(content);
-    setShowQuickReplies(false);
-    inputRef.current?.focus();
-  };
-
-  // --- GỬI TIN NHẮN THẬT RA FACEBOOK / ZALO / TIKTOK ---
-  const handleSendMessage = (customPayload = null) => {
-    if (!activeConversation) return;
-    const textToSend = customPayload ? customPayload.text : messageInput.trim();
-    if (!textToSend && !customPayload) return;
-
-    const nowTime =
-      new Date().toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) + ', Hôm nay';
-
-    const newMsg = {
-      id: 'msg_' + Date.now(),
-      sender: 'agent',
-      agentName: currentUser?.name || 'Quản trị viên',
-      type: customPayload?.type || 'text',
-      text: textToSend,
-      fileName: customPayload?.fileName,
-      fileSize: customPayload?.fileSize,
-      imageUrl: customPayload?.imageUrl,
-      timestamp: nowTime,
-      status: 'sent'
-    };
-
+  const updateMessageStatus = (convId, msgId, status, errorReason = '') => {
     setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id !== activeConversation.id) return conv;
+      prev.map((c) => {
+        if (c.id !== convId) return c;
         return {
-          ...conv,
-          unreadCount: 0,
-          lastTime: 'Vừa xong',
-          messages: [...conv.messages, newMsg],
-          activities: [
-            {
-              id: 'act_' + Date.now(),
-              time: nowTime,
-              text: `${currentUser?.name || 'Agent'} đã phản hồi qua ${
-                conv.platform === 'facebook'
-                  ? 'Messenger API'
-                  : conv.platform === 'zalo'
-                  ? 'Zalo Web Bridge'
-                  : 'TikTok API'
-              }`
-            },
-            ...(conv.activities || [])
-          ]
+          ...c,
+          messages: (c.messages || []).map((m) =>
+            m.id === msgId ? { ...m, deliveryStatus: status, errorReason } : m
+          ),
         };
       })
     );
+  };
 
-    if (['facebook', 'zalo', 'tiktok'].includes(activeConversation.platform) && textToSend) {
-      const matchedPage = fanpages.find(
-        (f) =>
-          String(f.pageId) === String(activeConversation.pageId) ||
-          f.name === activeConversation.channelName
-      );
-      const fallbackConfig = apiConfigs[activeConversation.platform];
-      const tokenToSend =
-        matchedPage?.accessToken ||
-        (activeConversation.platform === 'zalo' ? zaloBridgeUrlInput.trim() : '') ||
-        fallbackConfig?.accessToken ||
-        '';
+  const handleSendMessage = async (customPayload = null) => {
+    if (!activeConversation) return;
+    const textToSend = customPayload ? customPayload.text : messageInput.trim();
+    if (!textToSend && !customPayload?.imageUrl && !customPayload?.videoUrl) return;
 
-      fetch('/api/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'send_reply',
-          platform: activeConversation.platform,
-          pageId: matchedPage?.pageId || activeConversation.pageId || 'zalo_personal_main',
-          pageAccessToken: tokenToSend,
-          recipientPsid: String(activeConversation.platformUserId || activeConversation.name),
-          text: textToSend
-        })
-      })
-        .then(async (r) => {
-          const resData = await r.json().catch(() => ({}));
-          if (!r.ok || !resData.ok) {
-            triggerToast(
-              `Không gửi được tin ra ${activeConversation.platform.toUpperCase()}`,
-              resData.error || 'Vui lòng kiểm tra lại Token Fanpage hoặc Link Cloudflare Tunnel Zalo.',
-              activeConversation.platform
-            );
-          }
-        })
-        .catch((err) => {
-          triggerToast('Lỗi kết nối máy chủ', err.message, activeConversation.platform);
-        });
-    }
+    const targetConv = activeConversation;
+    const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+    const nowTime =
+      new Date().toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ', Hôm nay';
+
+    const newMsg = {
+      id: msgId,
+      sender: 'agent',
+      agentName: currentUser?.name || 'Quản trị viên',
+      type: customPayload?.type || 'text',
+      text: textToSend || '',
+      imageUrl: customPayload?.imageUrl || '',
+      videoUrl: customPayload?.videoUrl || '',
+      fileName: customPayload?.fileName || '',
+      fileUrl: customPayload?.fileUrl || '',
+      timestamp: nowTime,
+      deliveryStatus: 'sending', // 'sending' | 'sent' | 'failed'
+      errorReason: '',
+    };
+
+    processedIdsRef.current.add(msgId);
+
+    setConversations((prev) => {
+      const idx = prev.findIndex((c) => c.id === targetConv.id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const current = updated[idx];
+      updated.splice(idx, 1);
+      return [
+        {
+          ...current,
+          unreadCount: 0,
+          lastTime: 'Vừa xong',
+          messages: [...(current.messages || []), newMsg],
+        },
+        ...updated,
+      ];
+    });
 
     if (!customPayload) {
       setMessageInput('');
       setShowQuickReplies(false);
       setShowEmojiPicker(false);
     }
+
+    const matchedPage = fanpages.find(
+      (f) =>
+        String(f.pageId) === String(targetConv.pageId) ||
+        f.name === targetConv.channelName
+    );
+
+    const payloadText =
+      textToSend ||
+      (customPayload?.type === 'image'
+        ? `[Đã gửi hình ảnh: ${customPayload.imageUrl || 'ảnh đính kèm'}]`
+        : customPayload?.type === 'video'
+        ? `[Đã gửi video: ${customPayload.videoUrl || 'video đính kèm'}]`
+        : '');
+
+    try {
+      const res = await fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_reply',
+          pageId: matchedPage?.pageId || targetConv.pageId,
+          pageAccessToken: matchedPage?.accessToken || '',
+          recipientPsid: String(targetConv.platformUserId),
+          text: payloadText,
+        }),
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.ok) {
+        updateMessageStatus(targetConv.id, msgId, 'sent', '');
+      } else {
+        const reason = resData.error || 'Facebook từ chối gửi tin nhắn.';
+        updateMessageStatus(targetConv.id, msgId, 'failed', reason);
+        triggerToast('Chưa gửi được tin nhắn', reason, true);
+      }
+    } catch (err) {
+      const reason = err.message || 'Lỗi kết nối máy chủ.';
+      updateMessageStatus(targetConv.id, msgId, 'failed', reason);
+      triggerToast('Chưa gửi được tin nhắn', reason, true);
+    }
   };
 
-  const handleQuickAttachment = (type) => {
-    if (type === 'pdf') {
-      handleSendMessage({
-        type: 'pdf',
-        text: 'Đây là tài liệu báo giá & thông số kỹ thuật dành cho bạn',
-        fileName: 'Catalogue_San_Pham_Va_Bang_Gia_2026.pdf',
-        fileSize: '1.8 MB'
-      });
-    } else if (type === 'image') {
+  const handleImageFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
       handleSendMessage({
         type: 'image',
-        text: 'Gửi Anh/Chị hình ảnh sản phẩm thực tế ạ:',
-        imageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop'
+        text: messageInput.trim() || `[Hình ảnh: ${file.name}]`,
+        imageUrl: String(reader.result || ''),
+        fileName: file.name,
       });
-    }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleVideoFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    handleSendMessage({
+      type: 'video',
+      text: messageInput.trim() || `[Video: ${file.name}]`,
+      videoUrl: objectUrl,
+      fileName: file.name,
+    });
+    e.target.value = '';
   };
 
   const handleAddTag = (e) => {
     e.preventDefault();
     const trimmed = newTagText.trim();
     if (!trimmed || !activeConversation) return;
-    if (!activeConversation.tags.includes(trimmed)) {
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeConversation.id ? { ...c, tags: [...c.tags, trimmed] } : c
-        )
-      );
-    }
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeConversation.id) return c;
+        const currentTags = c.tags || [];
+        if (currentTags.includes(trimmed)) return c;
+        return { ...c, tags: [...currentTags, trimmed] };
+      })
+    );
     setNewTagText('');
     setIsAddingTag(false);
   };
@@ -883,7 +665,7 @@ export default function App() {
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeConversation.id
-          ? { ...c, tags: c.tags.filter((t) => t !== tagToRemove) }
+          ? { ...c, tags: (c.tags || []).filter((t) => t !== tagToRemove) }
           : c
       )
     );
@@ -899,7 +681,7 @@ export default function App() {
               phone: crmForm.phone,
               email: crmForm.email,
               leadStage: crmForm.leadStage,
-              notes: crmForm.notes
+              notes: crmForm.notes,
             }
           : c
       )
@@ -908,345 +690,134 @@ export default function App() {
     setTimeout(() => setCrmSavedToast(false), 2000);
   };
 
-  // Lưu cấu hình Link Cầu Nối Zalo Cá Nhân
-  const handleSaveZaloBridgeUrl = async (e) => {
-    e.preventDefault();
-    const cleanUrl = zaloBridgeUrlInput.trim();
-    if (!cleanUrl) return;
-    setApiConfigs((prev) => ({
-      ...prev,
-      zalo: { ...prev.zalo, accessToken: cleanUrl }
-    }));
-    await fetch('/api/webhook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'register_pages',
-        pages: [{ pageId: 'zalo_personal_main', platform: 'zalo', accessToken: cleanUrl }]
-      })
-    }).catch(() => {});
-    triggerToast('Đã lưu Link Cầu Nối Zalo', 'Hệ thống sẵn sàng gửi tin nhắn từ web ra Zalo Cá Nhân!', 'zalo');
-  };
-
-  // Dọn sạch tin nhắn cũ bị trùng/nhầm kênh trên cả Redis và trình duyệt
-  const handleClearAllMessagesHistory = async () => {
-    await fetch('/api/webhook?action=clear_events').catch(() => {});
-    processedWebhookIdsRef.current.clear();
+  const handleClearOldMessages = async () => {
+    try {
+      await fetch('/api/webhook?action=clear_events');
+    } catch (e) {}
+    processedIdsRef.current.clear();
     setConversations([]);
-    setSelectedId(null);
+    setSelectedId('');
     localStorage.removeItem(STORAGE_KEY);
-    triggerToast('Đã dọn sạch hộp thư', 'Toàn bộ lịch sử tin nhắn cũ đã được xóa để đón tin mới.');
+    triggerToast('Đã dọn sạch tin nhắn cũ', 'Hộp thư và bộ nhớ tạm đã được làm mới.', false);
   };
 
-  const handleTestApiConnection = (platformKey) => {
-    setTestingApiKey(platformKey);
-    setTimeout(() => {
-      setTestingApiKey(null);
-      setApiTestResult((prev) => ({
-        ...prev,
-        [platformKey]: {
-          ok: true,
-          latency: Math.floor(85 + Math.random() * 60) + 'ms',
-          time: new Date().toLocaleTimeString('vi-VN')
+  // Kết nối Facebook cá nhân & quét Fanpage
+  const fetchPagesFromFacebookToken = (token) => {
+    fetch(
+      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,username,category,picture,access_token&access_token=${encodeURIComponent(
+        token
+      )}`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        setIsConnectingApi(false);
+        if (data.error) {
+          triggerToast('Lỗi từ Facebook', data.error.message || 'Không lấy được danh sách Fanpage.', true);
+          return;
         }
-      }));
-      triggerToast(
-        `Kết nối ${apiConfigs[platformKey].name} thành công`,
-        'HTTP 200 OK - Webhook đang hoạt động ổn định.',
-        platformKey
-      );
-    }, 650);
+        const list = (data.data || []).map((p) => ({
+          pageId: String(p.id),
+          name: p.name,
+          username: p.username ? `@${p.username}` : `@${p.id}`,
+          category: p.category || 'Fanpage Facebook',
+          avatar: p.picture?.data?.url || '',
+          accessToken: p.access_token,
+        }));
+        setDiscoveredPages(list);
+        setSelectedDiscoverIds(list.map((x) => x.pageId));
+      })
+      .catch((err) => {
+        setIsConnectingApi(false);
+        triggerToast('Lỗi kết nối Facebook', err.message, true);
+      });
   };
 
-  // --- KẾT NỐI FACEBOOK CÁ NHÂN & QUÉT FANPAGE THẬT (META GRAPH API V21.0) ---
-  const openConnectModal = (mode = 'personal') => {
-    setConnectMode(mode);
-    setOauthStep(fbPersonalAccount ? 2 : 1);
-    setApiLogs([]);
-    setShowManualPageForm(false);
-    setConnectModalOpen(true);
-  };
-
-  const handleFacebookPersonalLogin = (useCustomToken = false) => {
+  const handleStartFbLogin = () => {
     setIsConnectingApi(true);
-
-    const fetchRealPagesFromGraphApi = (userAccessToken, userInfo = null) => {
-      fetch(
-        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,username,category,picture,access_token,tasks&access_token=${encodeURIComponent(
-          userAccessToken
-        )}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            setIsConnectingApi(false);
-            triggerToast(
-              'Lỗi từ Facebook Graph API',
-              data.error.message || 'Token không hợp lệ hoặc thiếu quyền pages_show_list.'
-            );
-            return;
-          }
-
-          const realPages = (data.data || []).map((p) => ({
-            pageId: p.id,
-            name: p.name,
-            username: p.username ? `@${p.username}` : `@${p.id}`,
-            category: p.category || 'Fanpage Facebook',
-            avatarText: (p.name || 'FB').slice(0, 2).toUpperCase(),
-            avatarUrl: p.picture?.data?.url || '',
-            tasks: p.tasks || ['MANAGE', 'MESSAGING'],
-            pageAccessToken: p.access_token
-          }));
-
-          const profile = {
-            name: userInfo?.name || 'Tài khoản Facebook Đã Xác Thực',
-            email: userInfo?.email || 'admin@facebook.com',
-            fbUserId: userInfo?.id || 'verified_fb_user',
-            avatar:
-              userInfo?.picture?.data?.url ||
-              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=faces',
-            userAccessToken: userAccessToken,
-            expiresIn: '60 ngày'
-          };
-
-          setFbPersonalAccount(profile);
-          setAvailablePagesList(realPages);
-          if (realPages.length > 0) {
-            setSelectedNewPageIds(realPages.map((p) => p.pageId));
-          }
-          setIsConnectingApi(false);
-          setOauthStep(2);
-          setApiLogs([
-            {
-              step: 'FB.login() -> OAuth 2.0 User Access Token',
-              status: '200 OK',
-              payload: `Đã xác thực tài khoản: ${profile.name}`
-            },
-            {
-              step: 'GET /v21.0/me/accounts?fields=id,name,username,access_token,tasks',
-              status: '200 OK',
-              payload: `Tìm thấy ${realPages.length} Fanpage thật bạn đang quản lý!`
-            }
-          ]);
-        })
-        .catch((err) => {
-          setIsConnectingApi(false);
-          triggerToast('Lỗi kết nối mạng', err.message);
-        });
-    };
-
-    if (useCustomToken && customUserToken.trim()) {
-      fetchRealPagesFromGraphApi(customUserToken.trim());
+    if (customUserToken.trim()) {
+      fetchPagesFromFacebookToken(customUserToken.trim());
       return;
     }
 
     if (!window.FB) {
       setIsConnectingApi(false);
-      triggerToast(
-        'Facebook SDK chưa sẵn sàng',
-        'Vui lòng tắt trình chặn quảng cáo (AdBlock) hoặc tải lại trang rồi thử lại.'
-      );
+      triggerToast('Chưa tải được Facebook SDK', 'Hãy tải lại trang hoặc tắt trình chặn quảng cáo.', true);
       return;
     }
 
     window.FB.login(
-      function (response) {
-        if (response.authResponse) {
-          const accessToken = response.authResponse.accessToken;
-          window.FB.api('/me', { fields: 'id,name,email,picture' }, function (userInfo) {
-            fetchRealPagesFromGraphApi(accessToken, userInfo);
-          });
+      (response) => {
+        if (response.authResponse?.accessToken) {
+          fetchPagesFromFacebookToken(response.authResponse.accessToken);
         } else {
           setIsConnectingApi(false);
-          triggerToast(
-            'Đã hủy đăng nhập Facebook',
-            'Bạn cần cấp quyền quản lý Trang để đồng bộ Fanpage.'
-          );
+          triggerToast('Chưa hoàn tất đăng nhập Facebook', 'Bạn cần bấm Tiếp tục để lấy danh sách Fanpage.', true);
         }
       },
-      {
-        scope: 'pages_show_list,pages_messaging,pages_manage_metadata,pages_read_engagement',
-        return_scopes: true
-      }
+      { scope: 'pages_show_list,pages_messaging,pages_manage_metadata,pages_read_engagement' }
     );
   };
 
-  const handleAddManualPageToDiscover = (e) => {
-    e.preventDefault();
-    if (!manualPage.name.trim()) return;
-    const cleanUser = manualPage.username.trim()
-      ? manualPage.username.startsWith('@')
-        ? manualPage.username.trim()
-        : `@${manualPage.username.trim()}`
-      : `@${manualPage.name.toLowerCase().replace(/\s+/g, '')}`;
-    const newId =
-      manualPage.pageId.trim() || String(Math.floor(100000000000000 + Math.random() * 900000000000000));
-
-    const item = {
-      pageId: newId,
-      name: manualPage.name.trim(),
-      username: cleanUser,
-      category: 'Trang doanh nghiệp mới',
-      avatarText: manualPage.name.trim().slice(0, 2).toUpperCase(),
-      tasks: ['MANAGE', 'MESSAGING', 'MODERATE'],
-      pageAccessToken: `EAABsbCS1iHgBO_CUSTOM_${newId.slice(-6)}_${Date.now()}`
-    };
-
-    setAvailablePagesList((prev) => [item, ...prev]);
-    setSelectedNewPageIds((prev) => [...new Set([...prev, newId])]);
-    setManualPage({ name: '', username: '', pageId: '' });
-    setShowManualPageForm(false);
-  };
-
-  const handleConfirmConnectSelectedPages = () => {
-    const pagesToIntegrate = availablePagesList.filter((p) =>
-      selectedNewPageIds.includes(p.pageId)
-    );
-    if (pagesToIntegrate.length === 0) return;
+  const handleSaveSelectedPages = async () => {
+    const chosen = discoveredPages.filter((p) => selectedDiscoverIds.includes(p.pageId));
+    if (chosen.length === 0) return;
 
     setIsConnectingApi(true);
-    setOauthStep(3);
+    const formatted = chosen.map((p) => ({
+      id: 'page_' + p.pageId,
+      pageId: p.pageId,
+      name: p.name,
+      username: p.username,
+      avatar: p.avatar || '',
+      accessToken: p.accessToken,
+      connected: true,
+      updatedAt: 'Vừa xong',
+    }));
 
-    setTimeout(() => {
-      const generatedLogs = [];
-      setFanpages((prev) => {
-        const updated = [...prev];
-        pagesToIntegrate.forEach((p) => {
-          generatedLogs.push({
-            step: `POST /v21.0/${p.pageId}/subscribed_apps`,
-            status: '200 OK {"success": true}',
-            payload: `subscribed_fields: ["messages", "messaging_postbacks", "message_deliveries", "message_reads"]`
-          });
-
-          const existingIdx = updated.findIndex((item) => item.pageId === p.pageId);
-          if (existingIdx !== -1) {
-            updated[existingIdx] = {
-              ...updated[existingIdx],
-              connected: true,
-              lastUpdated: 'Vừa xong',
-              updatedBy: currentUser?.name || 'Admin',
-              accessToken: p.pageAccessToken
-            };
-          } else {
-            updated.unshift({
-              id: 'page_' + p.pageId,
-              pageId: p.pageId,
-              name: p.name,
-              username: p.username,
-              avatarText: p.avatarText || 'FB',
-              avatarUrl: p.avatarUrl || '',
-              integratedAt: 'Vừa xong',
-              capiGranted: false,
-              pixelId: '',
-              messengerCallEnabled: false,
-              lastUpdated: 'Vừa xong',
-              updatedBy: currentUser?.name || 'Admin',
-              connected: true,
-              isBusiness: connectMode === 'business',
-              accessToken: p.pageAccessToken,
-              webhookSubscribed: true
-            });
-          }
-        });
-        return updated;
+    setFanpages((prev) => {
+      const next = [...prev];
+      formatted.forEach((fp) => {
+        const idx = next.findIndex((item) => String(item.pageId) === String(fp.pageId));
+        if (idx !== -1) {
+          next[idx] = { ...next[idx], ...fp };
+        } else {
+          next.unshift(fp);
+        }
       });
+      return next;
+    });
 
-      // Lưu Page Access Token thật lên Upstash Redis
-      fetch('/api/webhook', {
+    try {
+      await fetch('/api/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'register_pages',
-          pages: pagesToIntegrate.map((p) => ({
+          pages: formatted.map((p) => ({
             pageId: p.pageId,
             name: p.name,
-            accessToken: p.pageAccessToken
-          }))
-        })
-      }).catch(() => {});
+            accessToken: p.accessToken,
+          })),
+        }),
+      });
+    } catch (e) {}
 
-      setApiLogs((prev) => [...prev, ...generatedLogs]);
-      setIsConnectingApi(false);
-      triggerToast(
-        `Đã kết nối ${pagesToIntegrate.length} Fanpage thành công`,
-        'Webhook nhận tin nhắn thời gian thực đã được kích hoạt.',
-        'facebook'
-      );
-    }, 600);
-  };
-
-  const handleToggleMessengerCall = (pageId) => {
-    setFanpages((prev) =>
-      prev.map((fp) => {
-        if (fp.id !== pageId) return fp;
-        const nextVal = !fp.messengerCallEnabled;
-        triggerToast(
-          nextVal ? 'Đã bật gọi Messenger' : 'Đã tắt gọi Messenger',
-          `Fanpage ${fp.name} đã được cập nhật cấu hình cuộc gọi.`,
-          'facebook'
-        );
-        return { ...fp, messengerCallEnabled: nextVal, lastUpdated: 'Vừa xong' };
-      })
-    );
-  };
-
-  const handleOpenCapiModal = (fp) => {
-    setCapiModalPage(fp);
-    setPixelIdInput(fp.pixelId || '849201948271645');
-  };
-
-  const handleSaveCapiGrant = (e) => {
-    e.preventDefault();
-    if (!capiModalPage) return;
-    setFanpages((prev) =>
-      prev.map((fp) =>
-        fp.id === capiModalPage.id
-          ? {
-              ...fp,
-              capiGranted: true,
-              pixelId: pixelIdInput.trim() || '849201948271645',
-              lastUpdated: 'Vừa xong'
-            }
-          : fp
-      )
-    );
+    setIsConnectingApi(false);
+    setConnectModalOpen(false);
     triggerToast(
-      'Đã cấp quyền Conversions API (CAPI)',
-      `Ghi nhận chuyển đổi mua hàng từ Messenger cho ${capiModalPage.name}.`,
-      'facebook'
+      `Đã lưu ${formatted.length} Fanpage`,
+      'Đã lưu Token tự động — các lần sau không cần đăng nhập lại khi chỉ nhắn tin.',
+      false
     );
-    setCapiModalPage(null);
   };
 
-  const handleTogglePageConnection = (id) => {
-    setFanpages((prev) =>
-      prev.map((fp) => {
-        if (fp.id !== id) return fp;
-        const nextConn = !fp.connected;
-        triggerToast(
-          nextConn ? 'Đã khôi phục kết nối Webhook' : 'Đã tạm ngắt kết nối Fanpage',
-          fp.name,
-          'facebook'
-        );
-        return { ...fp, connected: nextConn, lastUpdated: 'Vừa xong' };
-      })
-    );
-    setOpenRowMenuId(null);
+  const handleRemoveFanpage = (pageId) => {
+    setFanpages((prev) => prev.filter((fp) => String(fp.pageId) !== String(pageId)));
+    if (String(selectedPageFilter) === String(pageId)) {
+      setSelectedPageFilter('all');
+    }
   };
 
-  const handleRemoveFanpage = (id) => {
-    setFanpages((prev) => prev.filter((fp) => fp.id !== id));
-    setOpenRowMenuId(null);
-    triggerToast('Đã gỡ tích hợp Fanpage', 'Trang đã được xóa khỏi danh sách quản lý.');
-  };
-
-  const handleCopyCode = (code) => {
-    navigator.clipboard?.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  // ==================== MÀN HÌNH ĐĂNG NHẬP BẢO MẬT ====================
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0F294A] via-[#153864] to-[#0B1E38] flex items-center justify-center p-4 font-sans">
@@ -1256,47 +827,52 @@ export default function App() {
               <MessageSquare className="w-6 h-6 text-sky-400" />
             </div>
             <h1 className="text-xl font-bold text-slate-900">
-              Omni<span className="text-[#0084FF]">Chat</span> Workspace
+              Omni<span className="text-[#0084FF]">Chat</span> Facebook
             </h1>
             <p className="text-xs text-slate-500 mt-1">
-              Hệ thống Quản lý Tin nhắn Đa nền tảng Nội bộ
+              Đăng nhập hệ thống quản lý tin nhắn Fanpage
             </p>
           </div>
 
-          <form onSubmit={handleStaffLogin} className="p-7 space-y-4 text-xs">
+          <form onSubmit={handleStaffLogin} className="p-7 space-y-4">
             {loginError && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 font-medium">
-                {loginError}
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{loginError}</span>
               </div>
             )}
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">Tên đăng nhập</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Tên đăng nhập
+              </label>
               <input
                 type="text"
-                required
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                placeholder="Nhập tài khoản (VD: admin)"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-[#0084FF]"
+                placeholder="Ví dụ: admin"
+                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0084FF]"
+                required
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">Mật khẩu</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Mật khẩu
+              </label>
               <input
                 type="password"
-                required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-[#0084FF]"
+                className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0084FF]"
+                required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-[#0084FF] hover:bg-blue-600 text-white font-bold text-sm shadow-md transition"
+              className="w-full py-2.5 rounded-lg bg-[#0084FF] hover:bg-[#006FD6] text-white text-sm font-semibold transition-colors cursor-pointer"
             >
               Đăng nhập vào hệ thống
             </button>
@@ -1307,321 +883,234 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#F4F6F9] text-slate-800 overflow-hidden font-sans select-none sm:select-auto">
-      {/* ==================== 1. TOP NAVIGATION BAR ==================== */}
-      <header className="h-12 bg-[#0F294A] text-white flex items-center justify-between px-3 lg:px-5 shrink-0 shadow-md z-30">
-        <div className="flex items-center h-full space-x-1 md:space-x-2 overflow-x-auto no-scrollbar">
-          <div
-            onClick={() => setActiveNav('messages')}
-            className="flex items-center space-x-2 pr-3 mr-1 cursor-pointer shrink-0"
-          >
-            <div className="w-7 h-7 rounded-full bg-white text-[#0F294A] flex items-center justify-center shadow-sm">
-              <MessageSquare className="w-4 h-4 fill-[#0F294A]" />
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-100 text-slate-800 font-sans select-none">
+      {/* Thanh điều hướng trên cùng */}
+      <header className="h-12 bg-[#0F294A] text-white flex items-center justify-between px-3 shrink-0 z-30">
+        <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2 pr-3 mr-1 border-r border-white/15">
+            <div className="w-7 h-7 rounded-lg bg-[#0084FF] flex items-center justify-center font-bold text-xs">
+              FB
             </div>
-            <span className="font-bold text-base tracking-tight hidden sm:inline">
-              Omni<span className="text-sky-400">Chat</span>
-            </span>
+            <span className="font-bold text-sm tracking-tight">OmniChat</span>
           </div>
 
-          {[
-            { id: 'messages', label: 'Tin nhắn', icon: MessageSquare, badge: unreadTotalCount },
-            { id: 'orders', label: 'Đơn & Sản phẩm', icon: ShoppingBag },
-            { id: 'live', label: 'Live', icon: Radio },
-            { id: 'customers', label: 'Khách', icon: Users },
-            { id: 'analytics', label: 'Thống kê', icon: BarChart3 },
-            { id: 'ai', label: 'Nhân viên AI', icon: Bot },
-            { id: 'tools', label: 'Công cụ', icon: Wrench }
-          ].map((item) => {
-            const isActive = activeNav === item.id;
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveNav(item.id)}
-                className={`relative h-full px-2.5 lg:px-3.5 flex items-center space-x-1.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'text-white bg-[#173A67]'
-                    : 'text-slate-300 hover:text-white hover:bg-[#15355E]'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 lg:hidden" />
-                <span>{item.label}</span>
-                {item.badge > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 text-[10px] font-bold bg-[#0084FF] text-white rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-sky-400 rounded-t" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center space-x-2 lg:space-x-2.5 shrink-0">
           <button
-            onClick={handleClearAllMessagesHistory}
-            title="Xóa sạch lịch sử tin nhắn cũ để làm mới hộp thư"
-            className="flex items-center space-x-1 bg-[#183B68] hover:bg-red-600/80 text-slate-200 hover:text-white text-xs font-medium px-2.5 py-1.5 rounded-md transition"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Dọn tin cũ</span>
-          </button>
-
-          <button
-            onClick={() => setShowApiCodeDrawer(true)}
-            title="Xem & sao chép mã nguồn kết nối"
-            className="flex items-center space-x-1.5 bg-[#183B68] hover:bg-[#214B82] text-sky-300 border border-sky-400/30 text-xs font-medium px-2.5 py-1.5 rounded-md transition"
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Code API</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveNav('tools');
-              setSettingsSubMenu('facebook');
-            }}
-            title="Cài đặt & Tích hợp kênh"
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition ${
-              activeNav === 'tools'
-                ? 'bg-sky-500 text-white'
-                : 'bg-[#183B68] text-slate-200 hover:text-white'
+            onClick={() => setActiveNav('messages')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center space-x-1.5 cursor-pointer ${
+              activeNav === 'messages'
+                ? 'bg-[#0084FF] text-white'
+                : 'text-slate-200 hover:bg-white/10'
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Tin nhắn</span>
+            {unreadTotalCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                {unreadTotalCount}
+              </span>
+            )}
           </button>
 
           <button
-            onClick={() => setAgentOnline(!agentOnline)}
-            className="flex items-center space-x-2 bg-[#163660] hover:bg-[#1D4478] px-2.5 py-1 rounded-full border border-slate-600/50 transition"
-            title="Nhấn để chuyển trạng thái trực tuyến"
+            onClick={() => setActiveNav('customers')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center space-x-1.5 cursor-pointer ${
+              activeNav === 'customers'
+                ? 'bg-[#0084FF] text-white'
+                : 'text-slate-200 hover:bg-white/10'
+            }`}
           >
-            <div className="relative">
-              <div className="w-6 h-6 rounded-full bg-amber-100 text-[#0F294A] font-extrabold text-[10px] flex items-center justify-center">
-                SG
-              </div>
-              <span
-                className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-[#0F294A] ${
-                  agentOnline ? 'bg-emerald-400' : 'bg-slate-400'
-                }`}
-              />
-            </div>
-            <span className="text-xs font-semibold hidden sm:inline tracking-wide">
-              {currentUser.name}
-            </span>
+            <Users className="w-3.5 h-3.5" />
+            <span>Khách hàng ({conversations.length})</span>
           </button>
 
           <button
-            onClick={handleStaffLogout}
-            title="Đăng xuất"
-            className="p-1.5 rounded-md bg-[#183B68] hover:bg-red-600 text-slate-300 hover:text-white transition"
+            onClick={() => setActiveNav('tools')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center space-x-1.5 cursor-pointer ${
+              activeNav === 'tools'
+                ? 'bg-[#0084FF] text-white'
+                : 'text-slate-200 hover:bg-white/10'
+            }`}
           >
-            <Power className="w-3.5 h-3.5" />
+            <Wrench className="w-3.5 h-3.5" />
+            <span>Fanpage & Kết nối ({fanpages.length})</span>
           </button>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleClearOldMessages}
+            className="px-2.5 py-1 rounded bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-medium flex items-center space-x-1 cursor-pointer"
+            title="Xóa toàn bộ tin nhắn cũ trên màn hình và bộ nhớ tạm"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Dọn tin cũ</span>
+          </button>
+
+          <div className="hidden md:flex items-center space-x-1.5 pl-2 border-l border-white/15 text-xs">
+            <span className="font-medium text-slate-100">{currentUser.name}</span>
+            <button
+              onClick={handleStaffLogout}
+              className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* ==================== TOAST THÔNG BÁO THỜI GIAN THỰC ==================== */}
+      {/* Thông báo nổi */}
       {toastNotification && (
-        <div className="fixed top-14 right-4 z-50 max-w-sm bg-white border border-slate-200 shadow-xl rounded-lg p-3 flex items-start space-x-3">
-          <div className="mt-0.5">
-            {toastNotification.platform ? (
-              <PlatformBadge platform={toastNotification.platform} size="lg" />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                <Bell className="w-4 h-4" />
-              </div>
-            )}
+        <div
+          className={`fixed top-14 right-4 z-50 max-w-sm rounded-xl shadow-xl border p-3.5 flex items-start space-x-3 bg-white ${
+            toastNotification.isError ? 'border-rose-300' : 'border-sky-200'
+          }`}
+        >
+          {toastNotification.isError ? (
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-[#0084FF] shrink-0 mt-0.5" />
+          )}
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-slate-900">
+              {toastNotification.title}
+            </div>
+            <div className="text-xs text-slate-600 mt-0.5 break-words">
+              {toastNotification.desc}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-900">{toastNotification.title}</p>
-            <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{toastNotification.desc}</p>
-          </div>
-          <button
-            onClick={() => setToastNotification(null)}
-            className="text-slate-400 hover:text-slate-600"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
         </div>
       )}
 
-      {/* ==================== TAB TIN NHẮN HỢP NHẤT ==================== */}
+      {/* Nội dung chính */}
       {activeNav === 'messages' && (
-        <main className="flex-1 flex min-h-0 overflow-hidden">
-          {/* CỘT 1: DANH SÁCH HỘI THOẠI */}
-          <aside className="w-full sm:w-[310px] lg:w-[325px] bg-white border-r border-slate-200 flex flex-col shrink-0">
-            <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center space-x-2">
-                  <h2 className="text-[16px] font-bold text-slate-800">Hội thoại</h2>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    ({filteredConversations.length})
-                  </span>
-                </div>
-                <div className="relative flex items-center">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-2 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Tìm hội thoại..."
-                    className="pl-7 pr-2 py-1 text-xs bg-slate-100 hover:bg-slate-200/70 focus:bg-white border border-transparent focus:border-sky-400 rounded-md w-36 focus:w-44 transition-all outline-none"
-                  />
-                </div>
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* Cột 1: Danh sách hội thoại Facebook */}
+          <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
+            <div className="p-3 border-b border-slate-100 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-slate-800">
+                  Messenger ({filteredConversations.length})
+                </span>
+                <button
+                  onClick={() => setActiveNav('tools')}
+                  className="text-[11px] text-[#0084FF] hover:underline font-medium cursor-pointer"
+                >
+                  + Thêm Fanpage
+                </button>
               </div>
 
-              <div className="flex items-center space-x-4 border-b border-slate-100 pb-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm tên khách, SĐT hoặc tin nhắn..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0084FF]"
+                />
+              </div>
+
+              <div className="flex items-center space-x-1.5">
                 <button
                   onClick={() => setFilterTab('all')}
-                  className={`text-[13px] font-semibold pb-1 transition relative ${
+                  className={`flex-1 py-1 rounded-md text-xs font-medium cursor-pointer ${
                     filterTab === 'all'
-                      ? 'text-slate-900'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-[#0084FF] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   Tất cả
-                  {filterTab === 'all' && (
-                    <span className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-[#0F294A]" />
-                  )}
                 </button>
-
                 <button
                   onClick={() => setFilterTab('unread')}
-                  className={`flex items-center space-x-1.5 text-[13px] font-semibold pb-1 transition relative ${
+                  className={`flex-1 py-1 rounded-md text-xs font-medium cursor-pointer ${
                     filterTab === 'unread'
-                      ? 'text-slate-900'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-[#0084FF] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  <span>Chưa trả lời</span>
-                  <span className="px-1.5 py-0.2 text-[11px] font-bold bg-[#0084FF] text-white rounded">
-                    {unreadTotalCount}
-                  </span>
-                  {filterTab === 'unread' && (
-                    <span className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-[#0F294A]" />
-                  )}
+                  Chưa trả lời ({unreadTotalCount})
                 </button>
               </div>
 
-              <div className="flex items-center space-x-1.5 pt-2.5 overflow-x-auto no-scrollbar">
-                {[
-                  { id: 'all', label: 'Tất cả kênh' },
-                  { id: 'facebook', label: 'Facebook' },
-                  { id: 'zalo', label: 'Zalo' },
-                  { id: 'tiktok', label: 'TikTok' }
-                ].map((pf) => (
-                  <button
-                    key={pf.id}
-                    onClick={() => setPlatformFilter(pf.id)}
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-full text-[11px] font-medium border transition shrink-0 ${
-                      platformFilter === pf.id
-                        ? 'bg-[#0F294A] text-white border-[#0F294A]'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {pf.id !== 'all' && <PlatformBadge platform={pf.id} size="sm" />}
-                    <span>{pf.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {activeFanpagesCount > 0 && (
-                <div className="mt-2">
-                  <select
-                    value={platformFilter.startsWith('page:') ? platformFilter : ''}
-                    onChange={(e) => setPlatformFilter(e.target.value || 'all')}
-                    className="w-full text-[11.5px] bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-slate-700 font-medium outline-none focus:border-[#1877F2]"
-                  >
-                    <option value="">-- Lọc theo Fanpage ({activeFanpagesCount} trang) --</option>
-                    {fanpages
-                      .filter((f) => f.connected)
-                      .map((fp) => (
-                        <option key={fp.id} value={`page:${fp.name}`}>
-                          📘 {fp.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
+              {fanpages.length > 0 && (
+                <select
+                  value={selectedPageFilter}
+                  onChange={(e) => setSelectedPageFilter(e.target.value)}
+                  className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-700"
+                >
+                  <option value="all">Tất cả Fanpage ({fanpages.length})</option>
+                  {fanpages.map((fp) => (
+                    <option key={fp.pageId} value={fp.pageId}>
+                      {fp.name}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
               {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center space-y-3 text-xs text-slate-400">
-                  <p>Chưa có tin nhắn nào. Hãy nhắn thử vào Fanpage Facebook hoặc Zalo Cá Nhân!</p>
-                  <button
-                    onClick={() => setActiveNav('tools')}
-                    className="px-3 py-1.5 rounded-md bg-[#1877F2] text-white font-semibold"
-                  >
-                    Cấu hình kết nối kênh →
-                  </button>
+                <div className="p-6 text-center text-xs text-slate-400 space-y-2">
+                  <p>Chưa có tin nhắn nào từ Facebook.</p>
+                  <p className="text-[11px]">
+                    Hãy kết nối Fanpage ở mục <strong>Fanpage & Kết nối</strong> rồi thử nhắn tin vào Messenger.
+                  </p>
                 </div>
               ) : (
                 filteredConversations.map((conv) => {
-                  const isSelected = conv.id === activeConversation?.id;
-                  const lastMsg = conv.messages[conv.messages.length - 1];
-                  const previewText =
-                    lastMsg?.type === 'pdf'
-                      ? `📄 ${lastMsg.fileName}`
-                      : lastMsg?.type === 'image'
-                      ? '🖼️ Đã gửi một hình ảnh'
+                  const lastMsg = conv.messages?.[conv.messages.length - 1];
+                  const preview =
+                    lastMsg?.type === 'image'
+                      ? '🖼️ Hình ảnh'
+                      : lastMsg?.type === 'video'
+                      ? '🎥 Video'
                       : lastMsg?.sender === 'agent'
-                      ? `Bạn: ${lastMsg.text}`
+                      ? `Bạn: ${lastMsg?.text || ''}`
                       : lastMsg?.text || '';
+                  const isSelected = activeConversation?.id === conv.id;
 
                   return (
                     <div
                       key={conv.id}
                       onClick={() => handleSelectConversation(conv.id)}
-                      className={`px-3.5 py-3 flex items-start space-x-3 cursor-pointer transition-colors ${
-                        isSelected
-                          ? 'bg-[#EBF3FE] border-l-[3px] border-l-[#0084FF]'
-                          : 'hover:bg-slate-50 border-l-[3px] border-l-transparent'
+                      className={`p-3 flex items-start space-x-3 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-[#EBF5FF]' : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="relative shrink-0">
-                        <UserAvatar src={conv.avatar} name={conv.name} className="w-11 h-11" />
-                        <div className="absolute -bottom-0.5 -right-0.5">
-                          <PlatformBadge platform={conv.platform} size="sm" />
-                        </div>
+                        <UserAvatar
+                          src={conv.avatar}
+                          name={conv.name}
+                          className="w-11 h-11"
+                        />
+                        <span className="absolute -bottom-0.5 -right-0.5">
+                          <FacebookBadge size="sm" />
+                        </span>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <h4
-                            className={`text-[13.5px] truncate ${
-                              conv.unreadCount > 0
-                                ? 'font-bold text-slate-900'
-                                : 'font-semibold text-slate-800'
-                            }`}
-                          >
+                          <span className="text-xs font-bold text-slate-900 truncate">
                             {conv.name}
-                          </h4>
-                          <span className="text-[11px] text-slate-400 shrink-0">
-                            {conv.lastTime}
+                          </span>
+                          <span className="text-[10px] text-slate-400 shrink-0">
+                            {conv.lastTime || ''}
                           </span>
                         </div>
-
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
-                          <p
-                            className={`text-xs truncate ${
-                              conv.unreadCount > 0
-                                ? 'font-semibold text-slate-800'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            {previewText}
-                          </p>
-                          {conv.unreadCount > 0 && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
-                          )}
+                        <div className="text-xs text-slate-600 truncate mt-0.5">
+                          {preview}
                         </div>
-
-                        <div className="mt-1 flex items-center space-x-1.5 text-[10px] text-slate-400">
-                          <span className="truncate max-w-[160px]">{conv.channelName}</span>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[10px] text-[#0084FF] font-medium truncate">
+                            {conv.channelName}
+                          </span>
+                          {(conv.unreadCount || 0) > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-[#0084FF] text-white text-[10px] font-bold">
+                              {conv.unreadCount}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1631,11 +1120,11 @@ export default function App() {
             </div>
           </aside>
 
-          {/* CỘT 2: KHUNG CHAT TRUNG TÂM */}
-          {activeConversation ? (
-            <section className="flex-1 flex flex-col min-w-0 bg-[#F4F6F9]">
-              <div className="bg-white border-b border-slate-200 px-4 py-2.5 shrink-0">
-                <div className="flex items-center justify-between gap-2">
+          {/* Cột 2: Khung chat giữa */}
+          <main className="flex-1 flex flex-col min-w-0 bg-[#F4F6F9]">
+            {activeConversation ? (
+              <>
+                <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-3 min-w-0">
                     <div className="relative shrink-0">
                       <UserAvatar
@@ -1643,80 +1132,43 @@ export default function App() {
                         name={activeConversation.name}
                         className="w-10 h-10"
                       />
-                      <div className="absolute -bottom-0.5 -right-0.5">
-                        <PlatformBadge platform={activeConversation.platform} size="sm" />
-                      </div>
+                      <span className="absolute -bottom-0.5 -right-0.5">
+                        <FacebookBadge size="sm" />
+                      </span>
                     </div>
-
                     <div className="min-w-0">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-bold text-[15px] text-slate-900 truncate">
-                          {activeConversation.name}
-                        </h3>
-                        <div className="flex items-center space-x-3 text-xs font-semibold">
-                          <button
-                            onClick={() => setChatSubTab('activity')}
-                            className={`pb-0.5 transition ${
-                              chatSubTab === 'activity'
-                                ? 'text-[#0084FF] border-b-2 border-[#0084FF]'
-                                : 'text-slate-500 hover:text-slate-800'
-                            }`}
-                          >
-                            Hoạt động
-                          </button>
-                          <button
-                            onClick={() => setChatSubTab('conversation')}
-                            className={`pb-0.5 transition ${
-                              chatSubTab === 'conversation'
-                                ? 'text-[#0084FF] border-b-2 border-[#0084FF]'
-                                : 'text-slate-500 hover:text-slate-800'
-                            }`}
-                          >
-                            Hội thoại
-                          </button>
-                        </div>
+                      <div className="text-sm font-bold text-slate-900 truncate">
+                        {activeConversation.name}
                       </div>
-
-                      <div className="text-[11.5px] text-slate-500 flex items-center space-x-1.5 mt-0.5">
-                        <span>
-                          {activeConversation.platform === 'facebook'
-                            ? 'Facebook Messenger'
-                            : activeConversation.platform === 'zalo'
-                            ? 'Zalo Cá Nhân'
-                            : 'TikTok Business'}
-                        </span>
-                        <span>•</span>
-                        <span className="font-medium text-slate-700">
-                          {activeConversation.channelName}
-                        </span>
+                      <div className="text-[11px] text-slate-500 truncate">
+                        Fanpage: <strong>{activeConversation.channelName}</strong> • PSID:{' '}
+                        {activeConversation.platformUserId}
                       </div>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => setShowRightPanel(!showRightPanel)}
-                    className="px-2.5 py-1.5 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 flex items-center space-x-1 shrink-0"
+                    onClick={() => setShowRightPanel((v) => !v)}
+                    className="px-2.5 py-1 rounded-md border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
-                    <Users className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="hidden md:inline">
-                      {showRightPanel ? 'Ẩn thông tin' : 'Thông tin khách'}
-                    </span>
+                    {showRightPanel ? 'Ẩn thông tin' : 'Hiện thông tin'}
                   </button>
                 </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  {activeConversation.tags.map((tag) => (
+                {/* Nhãn khách hàng */}
+                <div className="bg-white/90 border-b border-slate-200 px-4 py-1.5 flex items-center flex-wrap gap-1.5 shrink-0">
+                  {(activeConversation.tags || []).map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-medium"
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-sky-50 text-[#0084FF] border border-sky-200 text-[11px] font-medium"
                     >
                       <Tag className="w-2.5 h-2.5" />
                       <span>{tag}</span>
                       <button
                         onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-red-600 ml-0.5"
+                        className="hover:text-rose-600 cursor-pointer"
                       >
-                        <X className="w-2.5 h-2.5" />
+                        <X className="w-3 h-3" />
                       </button>
                     </span>
                   ))}
@@ -1725,998 +1177,444 @@ export default function App() {
                     <form onSubmit={handleAddTag} className="inline-flex items-center space-x-1">
                       <input
                         type="text"
-                        autoFocus
                         value={newTagText}
                         onChange={(e) => setNewTagText(e.target.value)}
                         placeholder="Tên nhãn..."
-                        className="px-2 py-0.5 text-[11px] border border-sky-400 rounded outline-none w-28"
+                        className="px-2 py-0.5 text-xs border border-sky-300 rounded-full focus:outline-none"
+                        autoFocus
                       />
                       <button
                         type="submit"
-                        className="px-2 py-0.5 bg-[#0084FF] text-white rounded text-[11px] font-semibold"
+                        className="px-2 py-0.5 rounded-full bg-[#0084FF] text-white text-[11px] cursor-pointer"
                       >
                         Lưu
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingTag(false)}
-                        className="text-slate-400 hover:text-slate-600"
-                      >
-                        <X className="w-3.5 h-3.5" />
                       </button>
                     </form>
                   ) : (
                     <button
                       onClick={() => setIsAddingTag(true)}
-                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-medium transition"
+                      className="text-[11px] text-slate-500 hover:text-[#0084FF] px-2 py-0.5 rounded-full border border-dashed border-slate-300 cursor-pointer"
                     >
-                      <Plus className="w-3 h-3" />
-                      <span>Thêm Tags</span>
+                      + Thêm nhãn
                     </button>
                   )}
                 </div>
-              </div>
 
-              {chatSubTab === 'activity' ? (
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Nhật ký hoạt động & Webhook Logs
-                  </h4>
-                  {(activeConversation.activities || []).length === 0 ? (
-                    <p className="text-xs text-slate-400">Chưa có lịch sử hoạt động nào.</p>
-                  ) : (
-                    activeConversation.activities.map((act) => (
-                      <div
-                        key={act.id}
-                        className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between text-xs"
-                      >
-                        <span className="text-slate-700 font-medium">{act.text}</span>
-                        <span className="text-slate-400 text-[11px]">{act.time}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ) : (
-                <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-4">
-                  {activeConversation.messages.map((msg) => {
+                {/* Danh sách tin nhắn */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {(activeConversation.messages || []).map((msg) => {
                     const isAgent = msg.sender === 'agent';
                     return (
                       <div
                         key={msg.id}
-                        className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'}`}
+                        className={`flex flex-col ${
+                          isAgent ? 'items-end' : 'items-start'
+                        }`}
                       >
-                        <div className="flex items-center space-x-1.5 mb-1 text-[11px] text-slate-400">
-                          {!isAgent && (
-                            <span className="font-semibold text-slate-600">
-                              {msg.senderName || activeConversation.name}
-                            </span>
-                          )}
-                          {isAgent && (
-                            <span className="font-semibold text-slate-600">
-                              {msg.agentName || 'Agent'}
-                            </span>
-                          )}
-                          <span>•</span>
-                          <span>{msg.timestamp}</span>
+                        <div className="text-[10px] text-slate-400 mb-1 px-1">
+                          {isAgent
+                            ? `${msg.agentName || currentUser.name} • ${msg.timestamp || ''}`
+                            : `${msg.senderName || activeConversation.name} • ${msg.timestamp || ''}`}
                         </div>
 
                         <div
-                          className={`max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-[13.5px] leading-relaxed shadow-2xs ${
+                          className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 text-sm shadow-2xs space-y-2 ${
                             isAgent
-                              ? 'bg-[#E3F1FF] text-slate-900 rounded-tr-sm border border-blue-200/70'
-                              : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'
+                              ? 'bg-[#0084FF] text-white rounded-br-sm'
+                              : 'bg-white text-slate-800 border border-slate-200 rounded-bl-sm'
                           }`}
                         >
-                          {msg.text && <p className="whitespace-pre-line">{msg.text}</p>}
-
-                          {msg.type === 'pdf' && (
-                            <div className="mt-2 p-2.5 rounded-xl bg-white border border-slate-200 flex items-center space-x-3">
-                              <div className="w-10 h-10 rounded-lg bg-red-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                                PDF
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-slate-800 truncate">
-                                  {msg.fileName}
-                                </p>
-                                <p className="text-[11px] text-slate-400">{msg.fileSize}</p>
-                              </div>
-                              <button
-                                onClick={() => triggerToast('Đang tải tệp PDF', msg.fileName)}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600"
-                              >
-                                <Download className="w-4 h-4" />
-                              </button>
-                            </div>
+                          {msg.type === 'image' && msg.imageUrl && (
+                            <img
+                              src={msg.imageUrl}
+                              alt={msg.fileName || 'Hình ảnh'}
+                              referrerPolicy="no-referrer"
+                              className="max-h-64 rounded-xl object-contain bg-slate-900/5"
+                            />
                           )}
 
-                          {msg.imageUrl && (
-                            <div className="mt-1.5 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                              <a href={msg.imageUrl} target="_blank" rel="noreferrer">
-                                <img
-                                  src={msg.imageUrl}
-                                  alt="Hình ảnh đính kèm"
-                                  referrerPolicy="no-referrer"
-                                  className="max-h-72 w-auto object-contain rounded-lg"
-                                />
-                              </a>
+                          {msg.type === 'video' && msg.videoUrl && (
+                            <video
+                              src={msg.videoUrl}
+                              controls
+                              className="max-h-64 rounded-xl bg-black"
+                            />
+                          )}
+
+                          {msg.type === 'file' && msg.fileUrl && (
+                            <a
+                              href={msg.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center space-x-1.5 underline text-xs"
+                            >
+                              <FileText className="w-4 h-4 shrink-0" />
+                              <span>{msg.fileName || 'Tải tệp đính kèm'}</span>
+                            </a>
+                          )}
+
+                          {msg.text && (
+                            <div className="whitespace-pre-wrap break-words leading-relaxed">
+                              {msg.text}
                             </div>
                           )}
                         </div>
+
+                        {/* Trạng thái gửi đi của Admin */}
+                        {isAgent && (
+                          <div className="mt-1 px-1 flex items-center space-x-1 text-[11px]">
+                            {msg.deliveryStatus === 'sending' && (
+                              <span className="inline-flex items-center space-x-1 text-slate-500">
+                                <Clock className="w-3 h-3 animate-spin" />
+                                <span>Đang gửi...</span>
+                              </span>
+                            )}
+                            {msg.deliveryStatus === 'sent' && (
+                              <span className="inline-flex items-center space-x-1 text-emerald-600 font-medium">
+                                <CheckCheck className="w-3.5 h-3.5" />
+                                <span>Đã gửi</span>
+                              </span>
+                            )}
+                            {msg.deliveryStatus === 'failed' && (
+                              <span
+                                className="inline-flex items-center space-x-1 text-rose-600 font-semibold"
+                                title={msg.errorReason || 'Không gửi được'}
+                              >
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                <span>
+                                  Chưa gửi được ({msg.errorReason || 'Lỗi kết nối'})
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                   <div ref={messagesEndRef} />
                 </div>
-              )}
 
-              <div className="bg-white border-t border-slate-200 p-3 relative shrink-0">
-                {showQuickReplies && (
-                  <div className="absolute bottom-full left-3 right-3 mb-2 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-20 max-h-60 overflow-y-auto">
-                    <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 flex items-center justify-between">
-                      <span>TIN NHẮN MẪU NHANH (Chọn để chèn)</span>
-                      <button
-                        onClick={() => setShowQuickReplies(false)}
-                        className="text-slate-400 hover:text-slate-600"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    {filteredQuickReplies.map((qr) => (
-                      <button
-                        key={qr.shortcut}
-                        onClick={() => handleSelectQuickReply(qr.content)}
-                        className="w-full text-left px-3.5 py-2 hover:bg-blue-50 border-b border-slate-100 last:border-b-0 transition"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <span className="px-1.5 py-0.5 rounded bg-sky-100 text-[#0084FF] font-mono text-[11px] font-bold">
-                            {qr.shortcut}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800">{qr.title}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 truncate mt-0.5">{qr.content}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {showEmojiPicker && (
-                  <div className="absolute bottom-full left-3 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2.5 flex items-center space-x-2 z-20">
-                    {['😊', '👍', '❤️', '💙', '🙏', '🚗', '🔥', '🎉'].map((em) => (
-                      <button
-                        key={em}
-                        onClick={() => {
-                          setMessageInput((prev) => prev + em);
-                          setShowEmojiPicker(false);
-                          inputRef.current?.focus();
-                        }}
-                        className="text-lg hover:scale-125 transition p-1"
-                      >
-                        {em}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-end space-x-2">
-                  <div className="flex-1 bg-slate-50 border border-slate-200 focus-within:border-[#0084FF] focus-within:bg-white rounded-xl px-3 py-2 transition">
-                    <textarea
-                      ref={inputRef}
-                      rows={2}
-                      value={messageInput}
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      placeholder="Nhập '/' để chọn tin nhắn mẫu, Enter để gửi..."
-                      className="w-full bg-transparent text-[13.5px] text-slate-800 outline-none resize-none"
-                    />
-                    <div className="flex items-center justify-between pt-1.5 border-t border-slate-200/70">
-                      <div className="flex items-center space-x-1.5 text-slate-500">
-                        <button
-                          type="button"
-                          onClick={() => setShowQuickReplies(!showQuickReplies)}
-                          className="p-1.5 rounded hover:bg-slate-200/70 hover:text-[#0084FF] transition text-xs font-bold"
-                        >
-                          / Mẫu
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleQuickAttachment('image')}
-                          className="p-1.5 rounded hover:bg-slate-200/70 hover:text-[#0084FF] transition"
-                        >
-                          <ImageIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleQuickAttachment('pdf')}
-                          className="p-1.5 rounded hover:bg-slate-200/70 hover:text-red-600 transition"
-                        >
-                          <Paperclip className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className="p-1.5 rounded hover:bg-slate-200/70 hover:text-amber-500 transition"
-                        >
-                          <Smile className="w-4 h-4" />
-                        </button>
+                {/* Khung soạn tin nhắn */}
+                <div className="bg-white border-t border-slate-200 p-3 relative shrink-0">
+                  {showQuickReplies && (
+                    <div className="mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2 max-h-44 overflow-y-auto">
+                      <div className="text-[11px] font-bold text-slate-500 px-2 py-1">
+                        Tin nhắn mẫu nhanh (gõ / để mở)
                       </div>
-
-                      <span className="text-[10.5px] text-slate-400 hidden sm:inline">
-                        Gửi qua {activeConversation.channelName}
-                      </span>
+                      {filteredQuickReplies.map((qr) => (
+                        <button
+                          key={qr.shortcut}
+                          type="button"
+                          onClick={() => {
+                            setMessageInput(qr.content);
+                            setShowQuickReplies(false);
+                            inputRef.current?.focus();
+                          }}
+                          className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-sky-50 text-xs cursor-pointer"
+                        >
+                          <span className="font-bold text-[#0084FF]">{qr.shortcut}</span>{' '}
+                          <span className="font-medium text-slate-800">— {qr.title}</span>
+                        </button>
+                      ))}
                     </div>
+                  )}
+
+                  {showEmojiPicker && (
+                    <div className="mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2.5 flex flex-wrap gap-1.5">
+                      {EMOJI_LIST.map((emo) => (
+                        <button
+                          key={emo}
+                          type="button"
+                          onClick={() => {
+                            setMessageInput((prev) => prev + emo);
+                            inputRef.current?.focus();
+                          }}
+                          className="w-8 h-8 rounded-lg hover:bg-slate-100 text-lg flex items-center justify-center cursor-pointer"
+                        >
+                          {emo}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <textarea
+                    ref={inputRef}
+                    rows={2}
+                    value={messageInput}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder="Nhập tin nhắn trả lời khách (nhấn Enter để gửi, Shift+Enter xuống dòng, gõ / để dùng mẫu)..."
+                    className="w-full text-sm resize-none focus:outline-none text-slate-800"
+                  />
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowEmojiPicker((v) => !v)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer"
+                        title="Chèn icon / emoji"
+                      >
+                        <Smile className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer"
+                        title="Gửi hình ảnh"
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => mediaInputRef.current?.click()}
+                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer"
+                        title="Gửi video"
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </button>
+
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileSelected}
+                        className="hidden"
+                      />
+                      <input
+                        ref={mediaInputRef}
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoFileSelected}
+                        className="hidden"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSendMessage()}
+                      className="px-4 py-1.5 rounded-lg bg-[#0084FF] hover:bg-[#006FD6] text-white text-xs font-semibold flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      <span>Gửi</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => handleSendMessage()}
-                    disabled={!messageInput.trim()}
-                    className="h-11 px-4 rounded-xl bg-[#0084FF] hover:bg-blue-600 disabled:bg-slate-300 text-white font-semibold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0"
-                  >
-                    <span>Gửi</span>
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
                 </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-xs text-slate-400">
+                Chọn một cuộc trò chuyện bên trái để bắt đầu nhắn tin.
               </div>
-            </section>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-sm text-slate-400">
-              Chọn một cuộc hội thoại để bắt đầu
-            </div>
-          )}
+            )}
+          </main>
 
-          {/* CỘT 3: HỒ SƠ CRM KHÁCH HÀNG */}
+          {/* Cột 3: Hồ sơ khách hàng */}
           {showRightPanel && activeConversation && (
-            <aside className="hidden xl:flex w-[290px] bg-white border-l border-slate-200 flex-col shrink-0 overflow-y-auto p-4 space-y-4 text-xs">
+            <aside className="hidden lg:flex w-72 bg-white border-l border-slate-200 flex-col shrink-0 p-4 space-y-4 overflow-y-auto text-xs">
               <div className="text-center pb-3 border-b border-slate-100">
                 <UserAvatar
                   src={activeConversation.avatar}
                   name={activeConversation.name}
-                  className="w-16 h-16 mx-auto border-2 border-slate-100 shadow-xs text-base"
+                  className="w-16 h-16 mx-auto"
                 />
-                <h4 className="font-bold text-sm text-slate-900 mt-2">
+                <div className="font-bold text-sm text-slate-900 mt-2">
                   {activeConversation.name}
-                </h4>
-                <div className="inline-flex items-center space-x-1 mt-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px]">
-                  <PlatformBadge platform={activeConversation.platform} size="sm" />
-                  <span>{activeConversation.channelName}</span>
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-600 mb-1">Giai đoạn khách hàng</label>
-                <select
-                  value={crmForm.leadStage}
-                  onChange={(e) => setCrmForm({ ...crmForm, leadStage: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-slate-50 font-semibold text-slate-800 outline-none focus:border-[#0084FF]"
-                >
-                  <option value="Mới">Mới (New Lead)</option>
-                  <option value="Đang tư vấn">Đang tư vấn</option>
-                  <option value="Đã báo giá">Đã báo giá</option>
-                  <option value="Chốt đơn">Chốt đơn / Đặt cọc</option>
-                </select>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  {activeConversation.channelName}
+                </div>
               </div>
 
               <div className="space-y-2.5">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1">Số điện thoại</label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={crmForm.phone}
-                      onChange={(e) => setCrmForm({ ...crmForm, phone: e.target.value })}
-                      className="w-full pl-8 pr-2.5 py-1.5 border border-slate-300 rounded-lg outline-none focus:border-[#0084FF]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-600 mb-1">Email</label>
-                  <div className="relative">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={crmForm.email}
-                      onChange={(e) => setCrmForm({ ...crmForm, email: e.target.value })}
-                      className="w-full pl-8 pr-2.5 py-1.5 border border-slate-300 rounded-lg outline-none focus:border-[#0084FF]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-600 mb-1">
-                    Platform User ID (PSID / UID)
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Giai đoạn khách hàng
                   </label>
-                  <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-mono text-[11px] text-slate-600">
-                    <span className="truncate">{activeConversation.platformUserId}</span>
+                  <select
+                    value={crmForm.leadStage}
+                    onChange={(e) =>
+                      setCrmForm((prev) => ({ ...prev, leadStage: e.target.value }))
+                    }
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg"
+                  >
+                    <option value="Mới">Mới (New Lead)</option>
+                    <option value="Đang tư vấn">Đang tư vấn</option>
+                    <option value="Đã chốt">Đã chốt</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="text"
+                    value={crmForm.phone}
+                    onChange={(e) =>
+                      setCrmForm((prev) => ({ ...prev, phone: e.target.value }))
+                    }
+                    placeholder="Nhập SĐT khách..."
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Ghi chú
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={crmForm.notes}
+                    onChange={(e) =>
+                      setCrmForm((prev) => ({ ...prev, notes: e.target.value }))
+                    }
+                    placeholder="Ghi chú chăm sóc..."
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500">Platform User ID (PSID)</div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono text-[11px] text-slate-800 truncate">
+                      {activeConversation.platformUserId}
+                    </span>
                     <button
+                      type="button"
                       onClick={() => {
-                        navigator.clipboard?.writeText(activeConversation.platformUserId);
-                        triggerToast('Đã sao chép User ID', activeConversation.platformUserId);
+                        navigator.clipboard?.writeText(String(activeConversation.platformUserId));
+                        setCopiedId(true);
+                        setTimeout(() => setCopiedId(false), 1500);
                       }}
-                      className="text-[#0084FF] font-sans font-semibold ml-1 shrink-0"
+                      className="text-[#0084FF] font-semibold ml-2 cursor-pointer"
                     >
-                      Copy
+                      {copiedId ? 'Đã chép' : 'Copy'}
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-bold text-slate-600 mb-1">Ghi chú chăm sóc</label>
-                <textarea
-                  rows={4}
-                  value={crmForm.notes}
-                  onChange={(e) => setCrmForm({ ...crmForm, notes: e.target.value })}
-                  placeholder="Ghi chú nhu cầu khách hàng..."
-                  className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-[#0084FF] resize-none"
-                />
+                <button
+                  type="button"
+                  onClick={handleSaveCrm}
+                  className="w-full py-2 rounded-lg bg-[#0F294A] hover:bg-[#173B69] text-white font-semibold cursor-pointer"
+                >
+                  {crmSavedToast ? '✓ Đã lưu thông tin' : 'Lưu thông tin khách'}
+                </button>
               </div>
-
-              <button
-                onClick={handleSaveCrm}
-                className="w-full py-2 rounded-lg bg-[#0F294A] hover:bg-[#173A67] text-white font-semibold transition flex items-center justify-center space-x-1.5"
-              >
-                {crmSavedToast ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span>Đã lưu hồ sơ khách hàng!</span>
-                  </>
-                ) : (
-                  <span>Lưu thông tin CRM</span>
-                )}
-              </button>
             </aside>
           )}
-        </main>
+        </div>
       )}
 
-      {/* ==================== TAB CÔNG CỤ & TÍCH HỢP KÊNH ==================== */}
+      {activeNav === 'customers' && (
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-slate-200 p-5">
+            <h2 className="text-base font-bold text-slate-900 mb-4">
+              Danh sách khách hàng Facebook ({conversations.length})
+            </h2>
+            {conversations.length === 0 ? (
+              <p className="text-xs text-slate-400">Chưa có khách hàng nào.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {conversations.map((c) => (
+                  <div
+                    key={c.id}
+                    className="py-3 flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <UserAvatar src={c.avatar} name={c.name} className="w-10 h-10" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-900 truncate">
+                          {c.name}
+                        </div>
+                        <div className="text-xs text-slate-500 truncate">
+                          {c.channelName} • {c.phone || 'Chưa có SĐT'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleSelectConversation(c.id)}
+                      className="px-3 py-1.5 rounded-lg bg-[#0084FF] text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Mở chat
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeNav === 'tools' && (
-        <main className="flex-1 flex min-h-0 overflow-hidden bg-white">
-          <aside className="hidden md:flex w-[225px] bg-[#F8FAFC] border-r border-slate-200 flex-col shrink-0 overflow-y-auto">
-            <div className="p-3 border-b border-slate-200/80">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={settingsSearch}
-                  onChange={(e) => setSettingsSearch(e.target.value)}
-                  placeholder="Tìm kiếm cài đặt"
-                  className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:border-[#1877F2] outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="p-2.5 space-y-5 text-[13px]">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-4xl mx-auto space-y-5">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 flex items-center justify-between gap-4">
               <div>
-                <div className="px-2.5 mb-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                  TÍCH HỢP KÊNH
-                </div>
-                <ul className="space-y-0.5">
-                  {[
-                    { id: 'facebook', label: 'Facebook', color: 'text-[#1877F2]', badgeIcon: 'f' },
-                    { id: 'zalo_personal', label: 'Zalo cá nhân', color: 'text-blue-500', badgeIcon: 'Z' },
-                    { id: 'tiktok', label: 'TikTok', color: 'text-slate-900', badgeIcon: '🎵' },
-                    { id: 'webhook', label: 'Webhook & API', color: 'text-indigo-600', badgeIcon: '🔗' }
-                  ]
-                    .filter((item) =>
-                      item.label.toLowerCase().includes(settingsSearch.trim().toLowerCase())
-                    )
-                    .map((item) => {
-                      const active = settingsSubMenu === item.id;
-                      return (
-                        <li key={item.id}>
-                          <button
-                            onClick={() => setSettingsSubMenu(item.id)}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12.5px] transition ${
-                              active
-                                ? 'bg-[#EBF3FE] text-[#1877F2] font-semibold'
-                                : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
-                            }`}
-                          >
-                            <span className="flex items-center space-x-2">
-                              <span
-                                className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold ${
-                                  item.id === 'facebook'
-                                    ? 'bg-[#1877F2] text-white'
-                                    : 'bg-slate-200/70 ' + item.color
-                                }`}
-                              >
-                                {item.badgeIcon}
-                              </span>
-                              <span>{item.label}</span>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                </ul>
-              </div>
-            </div>
-          </aside>
-
-          {settingsSubMenu === 'facebook' ? (
-            <section className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-white">
-              <div className="p-5 lg:p-7 max-w-[1380px] w-full mx-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-7 h-7 rounded-md bg-[#1877F2] text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
-                        f
-                      </div>
-                      <h1 className="text-xl font-bold text-slate-900">Facebook</h1>
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
-                        {fanpages.length}
-                      </span>
-                    </div>
-
-                    <p className="text-[13px] text-slate-600 mt-2">
-                      Đang hoạt động:{' '}
-                      <strong className="font-semibold text-slate-900">{activeFanpagesCount}</strong>.
-                      Đã tích hợp{' '}
-                      <strong className="font-semibold text-slate-900">{fanpages.length}</strong> /
-                      100.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <button
-                      onClick={() => setActiveNav('messages')}
-                      className="px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition flex items-center space-x-1.5"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>Mở Hộp thư ({unreadTotalCount})</span>
-                    </button>
-
-                    <button
-                      onClick={() => openConnectModal('personal')}
-                      className="px-3.5 py-2 rounded-md bg-[#1877F2] hover:bg-blue-600 text-white text-xs font-semibold shadow-sm transition flex items-center space-x-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Thêm fanpage</span>
-                    </button>
-                  </div>
-                </div>
-
-                {fbPersonalAccount && (
-                  <div className="mt-4 px-4 py-2.5 rounded-lg bg-[#EBF3FE] border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center space-x-2.5">
-                      <UserAvatar
-                        src={fbPersonalAccount.avatar}
-                        name={fbPersonalAccount.name}
-                        className="w-7 h-7"
-                      />
-                      <div>
-                        <span className="text-slate-600">Đang liên kết Facebook cá nhân: </span>
-                        <strong className="text-slate-900">{fbPersonalAccount.name}</strong>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => openConnectModal('personal')}
-                      className="text-[#1877F2] font-semibold hover:underline"
-                    >
-                      + Quét thêm trang mới
-                    </button>
-                  </div>
-                )}
-
-                <div className="mt-4 border border-slate-200 rounded-lg overflow-visible bg-white shadow-2xs">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-[#FAFAFB] text-[12px] font-semibold text-slate-600">
-                          <th className="py-3 pl-4 pr-2 w-10">
-                            <input type="checkbox" className="rounded border-slate-300" />
-                          </th>
-                          <th className="py-3 px-3">Tài khoản</th>
-                          <th className="py-3 px-3">Tích hợp lúc</th>
-                          <th className="py-3 px-3">Cập nhật cuối</th>
-                          <th className="py-3 px-3">Kết nối</th>
-                          <th className="py-3 pl-2 pr-4 text-right w-20"></th>
-                        </tr>
-                      </thead>
-
-                      <tbody className="divide-y divide-slate-100 text-[13px]">
-                        {filteredFanpages.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="py-10 text-center text-xs text-slate-400">
-                              Chưa có Fanpage nào được kết nối. Bấm nút <strong>"+ Thêm fanpage"</strong> ở góc trên để kết nối tài khoản Facebook của bạn.
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredFanpages.map((fp) => (
-                            <tr key={fp.id} className="hover:bg-slate-50/90 transition-colors">
-                              <td className="py-3.5 pl-4 pr-2">
-                                <input type="checkbox" className="rounded border-slate-300" />
-                              </td>
-                              <td className="py-3.5 px-3">
-                                <div className="flex items-center space-x-3">
-                                  <UserAvatar
-                                    src={fp.avatarUrl}
-                                    name={fp.name}
-                                    className="w-9 h-9"
-                                  />
-                                  <div className="min-w-0">
-                                    <div className="font-semibold text-slate-900 text-[13px] truncate">
-                                      {fp.name}
-                                    </div>
-                                    <div className="text-[11.5px] text-slate-400 truncate">
-                                      {fp.username} • ID: {fp.pageId}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3.5 px-3 text-slate-600 text-[12.5px]">
-                                {fp.integratedAt}
-                              </td>
-                              <td className="py-3.5 px-3 text-[12.5px] text-slate-700">
-                                {fp.lastUpdated}
-                              </td>
-                              <td className="py-3.5 px-3">
-                                {fp.connected ? (
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-[#E6F7ED] text-[#15803D] text-[11.5px] font-medium">
-                                    Đã kết nối
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-500 text-[11.5px] font-medium">
-                                    Ngắt kết nối
-                                  </span>
-                                )}
-                              </td>
-                              <td className="py-3.5 pl-2 pr-4 text-right relative">
-                                <div className="inline-flex items-center space-x-1.5">
-                                  <button
-                                    onClick={() => setTokenDetailPage(fp)}
-                                    title="Xem Page Access Token"
-                                    className="p-1.5 rounded-full text-slate-400 hover:text-[#1877F2] hover:bg-slate-100 transition"
-                                  >
-                                    <Settings className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleRemoveFanpage(fp.id)}
-                                    title="Gỡ Fanpage"
-                                    className="p-1.5 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </section>
-          ) : settingsSubMenu === 'zalo_personal' ? (
-            <section className="flex-1 overflow-y-auto p-6 bg-white">
-              <div className="max-w-3xl mx-auto space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-lg bg-[#0068FF] text-white font-bold flex items-center justify-center text-sm shadow-xs">
-                      Zalo
-                    </div>
-                    <div>
-                      <h1 className="text-lg font-bold text-slate-900">
-                        Zalo Cá Nhân (Zalo Web Bridge)
-                      </h1>
-                      <p className="text-xs text-slate-500">
-                        Quét mã QR và cấu hình đường hầm gửi tin nhắn 2 chiều
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      zaloBridgeState.status === 'connected'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
-                  >
-                    {zaloBridgeState.status === 'connected'
-                      ? '● Đã kết nối Zalo Web'
-                      : '● Đang chờ quét mã QR'}
-                  </span>
-                </div>
-
-                {zaloBridgeState.status === 'connected' ? (
-                  <div className="p-5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-emerald-900 text-sm">
-                        Tài khoản Zalo Cá Nhân đang đồng bộ 24/24!
-                      </h3>
-                      <p className="text-xs text-emerald-700">
-                        Mọi tin nhắn cá nhân & nhóm mới trên Zalo sẽ tự động hiển thị trong tab Tin nhắn.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setActiveNav('messages')}
-                      className="px-4 py-2 rounded-lg bg-[#0068FF] text-white text-xs font-semibold hover:bg-blue-600 shadow-xs"
-                    >
-                      Mở Hộp thư ngay →
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-6 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center gap-6">
-                    <div className="w-56 h-56 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center p-3 shrink-0">
-                      {zaloBridgeState.qrImage ? (
-                        <img
-                          src={zaloBridgeState.qrImage}
-                          alt="Mã QR Zalo Web"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="text-center space-y-2 p-3">
-                          <RefreshCw className="w-6 h-6 text-[#0068FF] animate-spin mx-auto" />
-                          <p className="text-[11px] text-slate-500">
-                            Đang chờ Trạm Cầu Nối gửi mã QR từ chat.zalo.me...
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-3 text-xs text-slate-600">
-                      <h3 className="font-bold text-slate-900 text-sm">
-                        Hướng dẫn đăng nhập Zalo Cá Nhân:
-                      </h3>
-                      <ol className="list-decimal pl-4 space-y-2 leading-relaxed">
-                        <li>Khởi động <strong>node bridge.mjs</strong> trên máy tính.</li>
-                        <li>Mở ứng dụng <strong>Zalo trên điện thoại</strong> và quét mã QR.</li>
-                        <li>Sau khi đăng nhập, tin nhắn sẽ tự động đồng bộ sau 3 giây.</li>
-                      </ol>
-                    </div>
-                  </div>
-                )}
-
-                {/* Form cấu hình Link Cloudflare Tunnel để gửi phản hồi 2 chiều */}
-                <form
-                  onSubmit={handleSaveZaloBridgeUrl}
-                  className="p-5 rounded-xl border border-slate-200 bg-white space-y-3 text-xs"
-                >
-                  <h3 className="font-bold text-slate-900 text-sm">
-                    Cấu hình đường hầm gửi tin phản hồi (Cloudflare Tunnel URL)
-                  </h3>
-                  <p className="text-slate-500">
-                    Dán đường link nhận được từ lệnh <code>cloudflared.exe tunnel --url http://localhost:3456</code> kèm đuôi <strong>/send</strong> (Ví dụ: <code>https://abc-xyz.trycloudflare.com/send</code>):
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      required
-                      value={zaloBridgeUrlInput}
-                      onChange={(e) => setZaloBridgeUrlInput(e.target.value)}
-                      placeholder="https://ten-ngau-nhien.trycloudflare.com/send"
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg font-mono outline-none focus:border-[#0068FF]"
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-lg bg-[#0F294A] hover:bg-[#173A67] text-white font-semibold shrink-0"
-                    >
-                      Lưu kết nối
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </section>
-          ) : (
-            <section className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-              <div className="max-w-4xl mx-auto space-y-5">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900 capitalize">
-                      Cấu hình tích hợp: {settingsSubMenu.replace('_', ' ')}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Quản lý Endpoint API & Webhook đồng bộ tin nhắn về hộp thư hợp nhất.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSettingsSubMenu('facebook')}
-                    className="px-3 py-1.5 rounded-md bg-[#1877F2] text-white text-xs font-semibold"
-                  >
-                    Quay lại quản lý Facebook
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Object.entries(apiConfigs).map(([key, cfg]) => {
-                    const testStatus = apiTestResult[key];
-                    return (
-                      <div
-                        key={key}
-                        className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between space-y-3"
-                      >
-                        <div>
-                          <div className="flex items-center space-x-2 mb-2">
-                            <PlatformBadge platform={key} size="md" />
-                            <span className="font-bold text-xs text-slate-900">{cfg.name}</span>
-                          </div>
-                          <p className="text-[11px] text-slate-500 mb-2">{cfg.pageName}</p>
-                          <div className="text-[10px] font-mono bg-slate-50 p-2 rounded border border-slate-200 truncate">
-                            {cfg.webhookUrl}
-                          </div>
-                        </div>
-
-                        {testStatus && (
-                          <div className="text-[11px] text-emerald-600 font-medium">
-                            ✓ HTTP 200 OK ({testStatus.latency})
-                          </div>
-                        )}
-
-                        <button
-                          onClick={() => handleTestApiConnection(key)}
-                          className="w-full py-1.5 rounded bg-[#0F294A] text-white text-xs font-semibold hover:bg-[#173A67]"
-                        >
-                          {testingApiKey === key ? 'Đang kiểm tra...' : 'Kiểm tra kết nối API'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-          )}
-        </main>
-      )}
-
-      {/* ==================== MODAL KẾT NỐI FACEBOOK CÁ NHÂN & QUÉT FANPAGE ==================== */}
-      {connectModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 bg-[#0F294A] text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-7 h-7 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-extrabold">
-                  f
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold">
-                    Kết nối Facebook Cá Nhân & Quét Fanpage Quản Lý
-                  </h3>
-                  <p className="text-[11px] text-sky-300">
-                    Meta Graph API v21.0 • OAuth 2.0 & Webhook Auto-Subscription
-                  </p>
-                </div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Quản lý Fanpage Facebook đã kết nối
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Token được lưu tự động để bạn nhắn tin mỗi ngày mà không cần kết nối lại Facebook cá nhân. Chỉ bấm nút bên cạnh khi muốn thêm Fanpage mới.
+                </p>
               </div>
               <button
-                onClick={() => setConnectModalOpen(false)}
-                className="text-slate-300 hover:text-white p-1"
+                type="button"
+                onClick={() => {
+                  setDiscoveredPages([]);
+                  setSelectedDiscoverIds([]);
+                  setConnectModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-lg bg-[#0084FF] hover:bg-[#006FD6] text-white text-xs font-semibold flex items-center space-x-1.5 shrink-0 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
+                <span>Thêm Fanpage mới</span>
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 space-y-5 text-xs">
-              {oauthStep === 1 && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
-                    <h4 className="font-bold text-slate-900 text-sm">
-                      Đăng nhập Facebook Cá nhân để lấy danh sách Fanpage thật
-                    </h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      Hệ thống sẽ gọi endpoint <code className="bg-white px-1 py-0.5 rounded border">GET /v21.0/me/accounts</code> để đồng bộ toàn bộ Fanpage bạn đang quản trị.
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100">
-                    <label className="block font-semibold text-slate-600 mb-1">
-                      Tùy chọn: Dán User Access Token từ Meta Graph Explorer (nếu có)
-                    </label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={customUserToken}
-                        onChange={(e) => setCustomUserToken(e.target.value)}
-                        placeholder="EAABsbCS1iHgBO..."
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg font-mono text-[11px] outline-none focus:border-[#1877F2]"
-                      />
-                      {customUserToken.trim() && (
-                        <button
-                          onClick={() => handleFacebookPersonalLogin(true)}
-                          className="px-3 py-2 rounded-lg bg-slate-800 text-white font-semibold hover:bg-slate-700"
-                        >
-                          Dùng Token này
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleFacebookPersonalLogin(false)}
-                    disabled={isConnectingApi}
-                    className="w-full py-3 rounded-xl bg-[#1877F2] hover:bg-blue-600 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2.5"
-                  >
-                    <span className="w-6 h-6 rounded-full bg-white text-[#1877F2] font-black flex items-center justify-center text-base">
-                      f
-                    </span>
-                    <span>
-                      {isConnectingApi
-                        ? 'Đang xác thực với Facebook OAuth...'
-                        : 'Tiếp tục với Facebook Cá Nhân'}
-                    </span>
-                  </button>
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {fanpages.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  Chưa có Fanpage nào được kết nối. Bấm <strong>Thêm Fanpage mới</strong> ở góc trên để bắt đầu.
                 </div>
-              )}
-
-              {oauthStep === 2 && (
-                <div className="space-y-4">
-                  {fbPersonalAccount && (
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                      <div className="flex items-center space-x-3">
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {fanpages.map((fp) => (
+                    <div
+                      key={fp.pageId}
+                      className="p-4 flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center space-x-3 min-w-0">
                         <UserAvatar
-                          src={fbPersonalAccount.avatar}
-                          name={fbPersonalAccount.name}
-                          className="w-9 h-9"
+                          src={fp.avatar}
+                          name={fp.name}
+                          className="w-11 h-11"
                         />
-                        <div>
-                          <div className="font-bold text-slate-900">{fbPersonalAccount.name}</div>
-                          <div className="text-[11px] text-emerald-700">
-                            ✓ Đã kết nối Graph API • Tìm thấy {availablePagesList.length} Fanpage
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-slate-900 truncate">
+                            {fp.name}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            Page ID: {fp.pageId} • Đã lưu Token sẵn sàng gửi tin
                           </div>
                         </div>
                       </div>
                       <button
-                        onClick={() => setShowManualPageForm(!showManualPageForm)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50"
+                        type="button"
+                        onClick={() => handleRemoveFanpage(fp.pageId)}
+                        className="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-medium cursor-pointer"
                       >
-                        + Nhập trang thủ công
+                        Gỡ trang
                       </button>
                     </div>
-                  )}
-
-                  {showManualPageForm && (
-                    <form
-                      onSubmit={handleAddManualPageToDiscover}
-                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5"
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input
-                          type="text"
-                          required
-                          value={manualPage.name}
-                          onChange={(e) => setManualPage({ ...manualPage, name: e.target.value })}
-                          placeholder="Tên Fanpage"
-                          className="px-2.5 py-1.5 border border-slate-300 rounded bg-white"
-                        />
-                        <input
-                          type="text"
-                          value={manualPage.username}
-                          onChange={(e) =>
-                            setManualPage({ ...manualPage, username: e.target.value })
-                          }
-                          placeholder="@username"
-                          className="px-2.5 py-1.5 border border-slate-300 rounded bg-white"
-                        />
-                        <div className="flex space-x-1.5">
-                          <input
-                            type="text"
-                            value={manualPage.pageId}
-                            onChange={(e) =>
-                              setManualPage({ ...manualPage, pageId: e.target.value })
-                            }
-                            placeholder="Page ID"
-                            className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
-                          />
-                          <button
-                            type="submit"
-                            className="px-3 py-1.5 rounded bg-[#1877F2] text-white font-semibold shrink-0"
-                          >
-                            Thêm
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden">
-                    {availablePagesList.map((page) => {
-                      const checked = selectedNewPageIds.includes(page.pageId);
-                      return (
-                        <label
-                          key={page.pageId}
-                          className={`p-3 flex items-center justify-between cursor-pointer transition ${
-                            checked ? 'bg-blue-50/60' : 'bg-white hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedNewPageIds((prev) => [...prev, page.pageId]);
-                                } else {
-                                  setSelectedNewPageIds((prev) =>
-                                    prev.filter((id) => id !== page.pageId)
-                                  );
-                                }
-                              }}
-                              className="rounded text-[#1877F2] w-4 h-4"
-                            />
-                            <UserAvatar
-                              src={page.avatarUrl}
-                              name={page.name}
-                              className="w-9 h-9"
-                            />
-                            <div>
-                              <div className="font-bold text-slate-900">{page.name}</div>
-                              <div className="text-[11px] text-slate-500">
-                                {page.username} • ID: {page.pageId}
-                              </div>
-                            </div>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {oauthStep === 3 && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-3">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-600 shrink-0" />
-                    <div>
-                      <h4 className="font-bold text-emerald-900 text-sm">
-                        Tích hợp Fanpage & Đăng ký Webhook hoàn tất!
-                      </h4>
-                      <p className="text-emerald-700 mt-0.5">
-                        Hệ thống đã lưu Page Access Token vào Database và kích hoạt nhận tin nhắn thật.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-              {oauthStep === 2 ? (
-                <>
-                  <button
-                    onClick={() => setOauthStep(1)}
-                    className="px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-white"
-                  >
-                    ← Đổi tài khoản FB
-                  </button>
-                  <button
-                    onClick={handleConfirmConnectSelectedPages}
-                    disabled={selectedNewPageIds.length === 0 || isConnectingApi}
-                    className="px-5 py-2 rounded-lg bg-[#1877F2] hover:bg-blue-600 disabled:bg-slate-300 text-white text-xs font-bold shadow-sm transition"
-                  >
-                    Kết nối {selectedNewPageIds.length} Fanpage & Bật Webhook
-                  </button>
-                </>
-              ) : oauthStep === 3 ? (
-                <>
-                  <button
-                    onClick={() => setConnectModalOpen(false)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-white"
-                  >
-                    Ở lại trang Quản lý
-                  </button>
-                  <button
-                    onClick={() => {
-                      setConnectModalOpen(false);
-                      setActiveNav('messages');
-                    }}
-                    className="px-5 py-2 rounded-lg bg-[#0F294A] hover:bg-[#173A67] text-white text-xs font-bold shadow-sm"
-                  >
-                    Mở Hộp thư đến ngay →
-                  </button>
-                </>
-              ) : (
-                <div className="w-full flex justify-end">
-                  <button
-                    onClick={() => setConnectModalOpen(false)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-white"
-                  >
-                    Đóng
-                  </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -2724,166 +1622,91 @@ export default function App() {
         </div>
       )}
 
-      {/* ==================== MODAL CHI TIẾT PAGE ACCESS TOKEN ==================== */}
-      {tokenDetailPage && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden text-xs">
-            <div className="px-5 py-3.5 bg-[#0F294A] text-white flex items-center justify-between">
-              <span className="font-bold text-sm">
-                Thông số API & Webhook — {tokenDetailPage.name}
-              </span>
+      {/* Cửa sổ kết nối Facebook cá nhân & quét Fanpage */}
+      {connectModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900">
+                Kết nối Facebook Cá Nhân & Quét Fanpage
+              </h3>
               <button
-                onClick={() => setTokenDetailPage(null)}
-                className="text-slate-300 hover:text-white"
+                type="button"
+                onClick={() => setConnectModalOpen(false)}
+                className="p-1 rounded hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 space-y-3">
+
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">
-                  Facebook Page ID
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tùy chọn: Dán User Access Token (nếu không dùng cửa sổ đăng nhập)
                 </label>
-                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded font-mono">
-                  <span>{tokenDetailPage.pageId}</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard?.writeText(tokenDetailPage.pageId);
-                      triggerToast('Đã sao chép Page ID', tokenDetailPage.pageId);
-                    }}
-                    className="text-[#1877F2] font-sans font-semibold"
-                  >
-                    Sao chép
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={customUserToken}
+                  onChange={(e) => setCustomUserToken(e.target.value)}
+                  placeholder="Để trống nếu đăng nhập trực tiếp bằng Facebook..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">
-                  Page Access Token
-                </label>
-                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded font-mono">
-                  <span className="truncate pr-2">{tokenDetailPage.accessToken}</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard?.writeText(tokenDetailPage.accessToken);
-                      triggerToast('Đã sao chép Page Access Token', 'Sẵn sàng dùng cho Graph API');
-                    }}
-                    className="text-[#1877F2] font-sans font-semibold shrink-0"
-                  >
-                    Sao chép
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setTokenDetailPage(null)}
-                className="px-4 py-1.5 rounded bg-[#0F294A] text-white font-semibold"
+                type="button"
+                disabled={isConnectingApi}
+                onClick={handleStartFbLogin}
+                className="w-full py-2.5 rounded-lg bg-[#0084FF] hover:bg-[#006FD6] text-white font-semibold cursor-pointer"
               >
-                Đóng
+                {isConnectingApi
+                  ? 'Đang lấy danh sách Fanpage...'
+                  : 'Tiếp tục với Facebook Cá Nhân'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ==================== NGĂN KÉO CODE API ==================== */}
-      {showApiCodeDrawer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex justify-end">
-          <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col">
-            <div className="px-5 py-4 bg-[#0F294A] text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2">
-                <Code2 className="w-5 h-5 text-sky-400" />
-                <h3 className="text-sm font-bold">Thông số Endpoint & Webhook</h3>
-              </div>
-              <button
-                onClick={() => setShowApiCodeDrawer(false)}
-                className="text-slate-300 hover:text-white p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 bg-slate-900 text-slate-100 p-4 overflow-auto font-mono text-xs">
-              <pre className="whitespace-pre-wrap">{CODE_SNIPPETS[activeCodeTab]}</pre>
-            </div>
-          </div>
-        </div>
-      )}
+            {discoveredPages.length > 0 && (
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="text-xs font-bold text-slate-800">
+                  Chọn Fanpage muốn lưu ({selectedDiscoverIds.length}/{discoveredPages.length}):
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-2">
+                  {discoveredPages.map((p) => {
+                    const checked = selectedDiscoverIds.includes(p.pageId);
+                    return (
+                      <label
+                        key={p.pageId}
+                        className="flex items-center space-x-2.5 p-2 rounded-lg border border-slate-200 cursor-pointer text-xs"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            setSelectedDiscoverIds((prev) =>
+                              prev.includes(p.pageId)
+                                ? prev.filter((id) => id !== p.pageId)
+                                : [...prev, p.pageId]
+                            );
+                          }}
+                        />
+                        <span className="font-semibold text-slate-900">{p.name}</span>
+                        <span className="text-slate-400">({p.pageId})</span>
+                      </label>
+                    );
+                  })}
+                </div>
 
-      {/* ==================== CÁC TAB PHỤ KHÁC ==================== */}
-      {activeNav !== 'messages' && activeNav !== 'tools' && (
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-5xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            {activeNav === 'customers' ? (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold text-slate-900">
-                    Danh bạ Khách hàng Đa nền tảng ({conversations.length})
-                  </h2>
-                  <button
-                    onClick={() => setActiveNav('messages')}
-                    className="text-xs font-semibold text-[#0084FF] hover:underline"
-                  >
-                    Mở khung chat →
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 bg-slate-50">
-                        <th className="py-2.5 px-3">Khách hàng</th>
-                        <th className="py-2.5 px-3">Kênh</th>
-                        <th className="py-2.5 px-3">Số điện thoại</th>
-                        <th className="py-2.5 px-3">Trạng thái</th>
-                        <th className="py-2.5 px-3 text-right">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {conversations.map((c) => (
-                        <tr key={c.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-3 font-semibold text-slate-800 flex items-center space-x-2">
-                            <UserAvatar src={c.avatar} name={c.name} className="w-7 h-7" />
-                            <span>{c.name}</span>
-                          </td>
-                          <td className="py-2.5 px-3 capitalize">{c.platform}</td>
-                          <td className="py-2.5 px-3 text-slate-600">{c.phone}</td>
-                          <td className="py-2.5 px-3">{c.leadStage}</td>
-                          <td className="py-2.5 px-3 text-right">
-                            <button
-                              onClick={() => {
-                                handleSelectConversation(c.id);
-                                setActiveNav('messages');
-                              }}
-                              className="px-2.5 py-1 rounded bg-[#0084FF] text-white font-medium hover:bg-blue-600"
-                            >
-                              Nhắn tin
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="py-10 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-sky-50 text-[#0084FF] flex items-center justify-center mx-auto">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <h2 className="text-base font-bold text-slate-900">
-                  Phân hệ đang đồng bộ dữ liệu thực tế
-                </h2>
                 <button
-                  onClick={() => setActiveNav('messages')}
-                  className="px-4 py-2 rounded-lg bg-[#0F294A] text-white text-xs font-semibold hover:bg-[#173A67] transition"
+                  type="button"
+                  onClick={handleSaveSelectedPages}
+                  className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
                 >
-                  Quay về Hộp thư Hợp nhất
+                  Lưu & Kích hoạt Fanpage đã chọn
                 </button>
               </div>
             )}
           </div>
-        </main>
+        </div>
       )}
     </div>
   );
