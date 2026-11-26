@@ -113,6 +113,7 @@ const UserAvatar = ({ src, name, className = 'w-11 h-11' }) => {
       <img
         src={src}
         alt={name || 'Avatar'}
+        referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className={`${className} rounded-full object-cover border border-slate-200 bg-slate-100 shrink-0`}
       />
@@ -365,6 +366,16 @@ export default function App() {
 
   // --- ĐỒNG BỘ TIN NHẮN THẬT TỪ BACKEND (/api/webhook?action=poll) ---
   const processedWebhookIdsRef = useRef(new Set());
+
+  // Nạp sẵn ID các tin nhắn đã lưu trong localStorage để không bao giờ lặp lại khi nhấn F5
+  useEffect(() => {
+    conversations.forEach((c) => {
+      (c.messages || []).forEach((m) => {
+        if (m.id) processedWebhookIdsRef.current.add(String(m.id));
+      });
+    });
+  }, []);
+
   useEffect(() => {
     const syncRealMessages = async () => {
       try {
@@ -374,9 +385,10 @@ export default function App() {
 
         // Lọc bỏ tin nhắn đã xử lý hoặc tin nhắn chiều đi (outgoing / isEcho)
         const newEvents = data.events.filter((ev) => {
-          if (processedWebhookIdsRef.current.has(ev.id)) return false;
+          const evId = String(ev.id || '');
+          if (!evId || processedWebhookIdsRef.current.has(evId)) return false;
           if (ev.direction === 'outgoing' || ev.isEcho) {
-            processedWebhookIdsRef.current.add(ev.id);
+            processedWebhookIdsRef.current.add(evId);
             return false;
           }
           return true;
@@ -385,11 +397,13 @@ export default function App() {
         if (newEvents.length === 0) return;
 
         newEvents.reverse().forEach((ev) => {
-          processedWebhookIdsRef.current.add(ev.id);
+          const evId = String(ev.id);
+          processedWebhookIdsRef.current.add(evId);
 
           const evPlatform = ev.platform || 'facebook';
-          const evPageId = String(ev.pageId || (evPlatform === 'zalo' ? 'zalo_personal_main' : ''));
-          const evSenderId = String(ev.senderPsid || '');
+          const evPageId = String(ev.pageId || (evPlatform === 'zalo' ? 'zalo_personal_main' : 'unknown_page'));
+          const evSenderId = String(ev.senderPsid || '').trim();
+          if (!evSenderId) return;
 
           const matchedPage = fanpages.find(
             (f) => String(f.pageId) === evPageId
@@ -410,7 +424,7 @@ export default function App() {
             }) + ', Hôm nay';
 
           const incomingMsg = {
-            id: ev.id,
+            id: evId,
             sender: 'customer',
             senderName: ev.senderName,
             type: ev.type || (ev.imageUrl ? 'image' : 'text'),
@@ -419,13 +433,16 @@ export default function App() {
             timestamp: nowTime
           };
 
-          // Tách bạch tuyệt đối hội thoại theo đúng (platform + pageId + senderPsid)
+          // Khóa định danh hội thoại duy nhất: platform::pageId::senderPsid
+          const uniqueConvKey = `${evPlatform}::${evPageId}::${evSenderId}`;
+
           setConversations((prev) => {
             const idx = prev.findIndex(
               (c) =>
-                c.platform === evPlatform &&
-                String(c.platformUserId) === evSenderId &&
-                String(c.pageId || '') === evPageId
+                c.id === uniqueConvKey ||
+                (c.platform === evPlatform &&
+                  String(c.platformUserId) === evSenderId &&
+                  String(c.pageId || '') === evPageId)
             );
 
             if (idx !== -1) {
@@ -433,8 +450,16 @@ export default function App() {
               const target = updated[idx];
               updated.splice(idx, 1);
 
-              // Tránh trùng tin nhắn nếu localStorage đã lưu trước đó
-              const alreadyHasMsg = target.messages.some((m) => m.id === incomingMsg.id);
+              // Chống trùng lặp tin nhắn bên trong cùng hội thoại
+              const alreadyHasMsg = target.messages.some(
+                (m) =>
+                  String(m.id) === evId ||
+                  (m.sender === 'customer' &&
+                    m.text === incomingMsg.text &&
+                    m.imageUrl === incomingMsg.imageUrl &&
+                    m.timestamp === incomingMsg.timestamp)
+              );
+
               const nextMessages = alreadyHasMsg
                 ? target.messages
                 : [...target.messages, incomingMsg];
@@ -442,6 +467,7 @@ export default function App() {
               return [
                 {
                   ...target,
+                  id: uniqueConvKey,
                   name: ev.senderName || target.name,
                   avatar: ev.senderAvatar || target.avatar,
                   pageId: evPageId,
@@ -457,7 +483,7 @@ export default function App() {
 
             return [
               {
-                id: `${evPlatform}_${evPageId}_${evSenderId}`,
+                id: uniqueConvKey,
                 name: ev.senderName || `Khách ${evPlatform.toUpperCase()}`,
                 avatar: ev.senderAvatar || '',
                 platform: evPlatform,
@@ -1708,6 +1734,7 @@ export default function App() {
                                 <img
                                   src={msg.imageUrl}
                                   alt="Hình ảnh đính kèm"
+                                  referrerPolicy="no-referrer"
                                   className="max-h-72 w-auto object-contain rounded-lg"
                                 />
                               </a>
