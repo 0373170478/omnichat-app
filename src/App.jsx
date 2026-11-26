@@ -840,12 +840,12 @@ export default function App() {
       })
     );
 // Nếu hội thoại là Facebook thật, gọi Backend gửi tin nhắn sang Messenger của khách
-    if (activeConversation.platform === 'facebook' && textToSend) {
-      const matchedPage = fanpages.find((f) => f.name === activeConversation.channelName);
-      fetch('/api/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+     if (activeConversation.platform === 'facebook' && textToSend) {
+       const matchedPage = fanpages.find((f) => f.name === activeConversation.channelName);
+       fetch('/api/webhook', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
           // Gửi tin nhắn phản hồi thật ra Facebook Messenger / Zalo / TikTok & báo lỗi nếu thất bại
     if (
       ['facebook', 'zalo', 'tiktok'].includes(activeConversation.platform) &&
