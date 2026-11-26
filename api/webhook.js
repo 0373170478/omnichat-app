@@ -1,6 +1,10 @@
+// Trạm Backend Đa Kênh: Facebook Messenger (có hình ảnh) + Zalo Cá Nhân (Bridge) + TikTok Business
+// Triển khai tự động tại: https://omnichat-app-beige.vercel.app/api/webhook
+
 const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
+// Hàm gọi lệnh tới Upstash Redis REST API
 async function redisCommand(commandArray) {
   if (!REDIS_URL || !REDIS_TOKEN) return null;
   try {
@@ -15,60 +19,9 @@ async function redisCommand(commandArray) {
     const data = await res.json();
     return data.result;
   } catch (err) {
+    console.error('Lỗi kết nối Redis:', err);
     return null;
   }
-}
-
-function extractFacebookAttachment(attachments = []) {
-  if (!Array.isArray(attachments) || attachments.length === 0) {
-    return { type: 'text', text: '', imageUrl: '', videoUrl: '', fileName: '', fileUrl: '' };
-  }
-
-  const first = attachments[0] || {};
-  const payload = first.payload || {};
-  const url = payload.url || '';
-
-  if (first.type === 'image') {
-    return {
-      type: 'image',
-      text: '[Hình ảnh]',
-      imageUrl: url,
-      videoUrl: '',
-      fileName: 'hinh-anh-messenger.jpg',
-      fileUrl: url,
-    };
-  }
-
-  if (first.type === 'video') {
-    return {
-      type: 'video',
-      text: '[Video]',
-      imageUrl: '',
-      videoUrl: url,
-      fileName: 'video-messenger.mp4',
-      fileUrl: url,
-    };
-  }
-
-  if (first.type === 'audio') {
-    return {
-      type: 'audio',
-      text: '[Tin nhắn thoại]',
-      imageUrl: '',
-      videoUrl: url,
-      fileName: 'ghi-am.mp3',
-      fileUrl: url,
-    };
-  }
-
-  return {
-    type: 'file',
-    text: payload.title ? `[Tệp: ${payload.title}]` : '[Tệp đính kèm]',
-    imageUrl: '',
-    videoUrl: '',
-    fileName: payload.title || 'tep-dinh-kem',
-    fileUrl: url,
-  };
 }
 
 export default async function handler(req, res) {
@@ -80,27 +33,43 @@ export default async function handler(req, res) {
 
   const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'omnichat_fb_verify_2026';
 
-  // 1. Xác thực Webhook với Meta
+  // =========================================================================
+  // 1. XÁC THỰC WEBHOOK VỚI META DEVELOPERS (HTTP GET)
+  // =========================================================================
   if (req.method === 'GET' && req.query['hub.mode']) {
-    if (
-      req.query['hub.mode'] === 'subscribe' &&
-      req.query['hub.verify_token'] === VERIFY_TOKEN
-    ) {
+    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) {
       return res.status(200).send(req.query['hub.challenge']);
     }
     return res.status(403).send('Verify token không khớp');
   }
 
-  // 2. Xóa sạch dữ liệu sự kiện cũ trên Redis
+  // =========================================================================
+  // 1.5. LẤY ẢNH MÃ QR & TRẠNG THÁI ZALO WEB CHO GIAO DIỆN
+  // =========================================================================
+  if (req.method === 'GET' && req.query.action === 'zalo_qr') {
+    const qrData = await redisCommand(['GET', 'omnichat:zalo_qr_base64']);
+    const status = (await redisCommand(['GET', 'omnichat:zalo_status'])) || 'waiting_qr';
+    return res.status(200).json({
+      ok: true,
+      status,
+      qrImage: qrData || null,
+    });
+  }
+
+  // =========================================================================
+  // 1.8. DỌN SẠCH DỮ LIỆU TIN NHẮN CŨ / LỖI TRONG REDIS (KHI CẦN RESET)
+  // =========================================================================
   if (req.method === 'GET' && req.query.action === 'clear_events') {
     await redisCommand(['DEL', 'omnichat:events']);
     await redisCommand(['DEL', 'omnichat:seen_ids']);
-    return res.status(200).json({ ok: true, cleared: true });
+    return res.status(200).json({ ok: true, message: 'Đã xóa sạch lịch sử tin nhắn cũ trên Redis!' });
   }
 
-  // 3. Lấy danh sách sự kiện mới cho giao diện
+  // =========================================================================
+  // 2. POLLING TIN NHẮN ĐA KÊNH CHO GIAO DIỆN WEB
+  // =========================================================================
   if (req.method === 'GET' && req.query.action === 'poll') {
-    const rawEvents = await redisCommand(['LRANGE', 'omnichat:events', '0', '99']);
+    const rawEvents = await redisCommand(['LRANGE', 'omnichat:events', '0', '149']);
     const events = Array.isArray(rawEvents)
       ? rawEvents
           .map((item) => {
@@ -120,59 +89,69 @@ export default async function handler(req, res) {
     });
   }
 
-  // 4. Xử lý POST
+  // =========================================================================
+  // 3. XỬ LÝ CÁC YÊU CẦU POST
+  // =========================================================================
   if (req.method === 'POST') {
     const body = req.body || {};
+    const channelParam = req.query.channel;
 
-    // A. Lưu danh sách Fanpage & Page Access Token vĩnh viễn vào Redis
+    // A0. Cập nhật ảnh mã QR Zalo Web & Trạng thái kết nối
+    if (body.action === 'update_zalo_qr') {
+      if (body.qrImage) {
+        await redisCommand(['SET', 'omnichat:zalo_qr_base64', body.qrImage, 'EX', '120']);
+      }
+      if (body.status) {
+        await redisCommand(['SET', 'omnichat:zalo_status', body.status]);
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // A. Lưu Page Access Token / Bridge URL vĩnh viễn vào Database
     if (body.action === 'register_pages' && Array.isArray(body.pages)) {
-      let savedCount = 0;
       for (const p of body.pages) {
         if (p.pageId && p.accessToken) {
           await redisCommand(['HSET', 'omnichat:page_tokens', String(p.pageId), p.accessToken]);
-          if (p.name) {
-            await redisCommand(['HSET', 'omnichat:page_names', String(p.pageId), String(p.name)]);
+          if (!p.platform || p.platform === 'facebook') {
+            try {
+              await fetch(
+                `https://graph.facebook.com/v21.0/${p.pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,message_deliveries,message_reads&access_token=${encodeURIComponent(
+                  p.accessToken
+                )}`,
+                { method: 'POST' }
+              );
+            } catch (e) {}
           }
-          savedCount += 1;
-          try {
-            await fetch(
-              `https://graph.facebook.com/v21.0/${p.pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,message_deliveries,message_reads&access_token=${encodeURIComponent(
-                p.accessToken
-              )}`,
-              { method: 'POST' }
-            );
-          } catch (e) {}
         }
       }
-      return res.status(200).json({ ok: true, registered: savedCount });
+      return res.status(200).json({ ok: true, registered: body.pages.length });
     }
 
-    // B. Gửi tin nhắn phản hồi từ Web ra Facebook Messenger
+    // B. Gửi tin nhắn phản hồi từ Web ra đúng kênh (Facebook / Zalo Cá Nhân / TikTok)
     if (body.action === 'send_reply') {
-      const { pageId, recipientPsid, text, pageAccessToken } = body;
-      const cleanPageId = String(pageId || '').trim();
-      const cleanRecipient = String(recipientPsid || '').trim();
-      const cleanText = String(text || '').trim();
-
+      const { platform = 'facebook', pageId, recipientPsid, text, pageAccessToken } = body;
       let tokenToUse =
-        String(pageAccessToken || '').trim() ||
-        (cleanPageId ? await redisCommand(['HGET', 'omnichat:page_tokens', cleanPageId]) : null);
+        pageAccessToken || (pageId ? await redisCommand(['HGET', 'omnichat:page_tokens', String(pageId)]) : null);
 
-      if (!tokenToUse) {
+      if (!tokenToUse || !recipientPsid || !text) {
         return res.status(400).json({
           ok: false,
-          error: 'Chưa có Page Access Token của Fanpage này. Hãy kết nối lại Fanpage trong mục Công cụ.',
-        });
-      }
-
-      if (!cleanRecipient || !cleanText) {
-        return res.status(400).json({
-          ok: false,
-          error: 'Thiếu thông tin người nhận (PSID) hoặc nội dung tin nhắn.',
+          error: `Thiếu cấu hình Token/Bridge cho kênh ${platform}.`,
         });
       }
 
       try {
+        if (platform === 'zalo') {
+          const bridgeUrl = tokenToUse.startsWith('http') ? tokenToUse : `https://${tokenToUse}`;
+          const zaloRes = await fetch(bridgeUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: String(recipientPsid), message: text }),
+          });
+          const zaloData = await zaloRes.json();
+          return res.status(200).json({ ok: zaloRes.ok && !zaloData.error, data: zaloData });
+        }
+
         const fbRes = await fetch(
           `https://graph.facebook.com/v21.0/me/messages?access_token=${encodeURIComponent(tokenToUse)}`,
           {
@@ -180,74 +159,99 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               messaging_type: 'RESPONSE',
-              recipient: { id: cleanRecipient },
-              message: { text: cleanText },
+              recipient: { id: String(recipientPsid) },
+              message: { text },
             }),
           }
         );
-
-        const rawText = await fbRes.text();
-        let fbData = {};
-        try {
-          fbData = JSON.parse(rawText);
-        } catch {
-          fbData = { raw: rawText };
-        }
-
-        if (!fbRes.ok || fbData.error) {
+        const fbData = await fbRes.json();
+        if (fbData.error) {
           return res.status(400).json({
             ok: false,
-            error: fbData.error?.message || 'Facebook từ chối gửi tin nhắn này.',
+            error: `Facebook từ chối gửi: ${fbData.error.message}`,
           });
         }
-
         return res.status(200).json({ ok: true, data: fbData });
       } catch (err) {
-        return res.status(500).json({
-          ok: false,
-          error: `Lỗi mạng khi gửi tới Facebook: ${err.message}`,
-        });
+        return res.status(500).json({ ok: false, error: err.message });
       }
     }
 
-    // C. Nhận tin nhắn thật từ Facebook Messenger Webhook
+    // C1. Nhận tin nhắn từ Zalo Web Bridge (?channel=zalo_personal)
+    if (channelParam === 'zalo_personal' || channelParam === 'zalo' || body.source === 'zalo_personal') {
+      const senderId = String(body.senderId || body.userId || '').trim();
+      const senderName = String(body.senderName || senderId).trim();
+      const text = body.text || (body.imageUrl ? '' : '[Khách Zalo gửi tệp / nhãn dán]');
+      const imageUrl = body.imageUrl || null;
+
+      if (senderId && senderName) {
+        // Chống lưu trùng lặp tin nhắn Zalo
+        const uniqueMsgId = String(body.msgId || `zweb_${senderId}_${text}_${imageUrl || ''}`);
+        const isNew = await redisCommand(['SADD', 'omnichat:seen_ids', uniqueMsgId]);
+        if (isNew === 0) {
+          return res.status(200).json({ ok: true, duplicate: true });
+        }
+        await redisCommand(['EXPIRE', 'omnichat:seen_ids', '86400']);
+
+        const newEvent = {
+          id: uniqueMsgId,
+          direction: 'incoming',
+          platform: 'zalo',
+          pageId: 'zalo_personal_main',
+          senderPsid: senderId,
+          senderName,
+          senderAvatar:
+            body.senderAvatar ||
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces',
+          type: imageUrl ? 'image' : 'text',
+          imageUrl,
+          text,
+          timestamp: body.timestamp || Date.now(),
+        };
+        await redisCommand(['LPUSH', 'omnichat:events', JSON.stringify(newEvent)]);
+        await redisCommand(['LTRIM', 'omnichat:events', '0', '299']);
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // C2. Nhận tin nhắn từ Facebook Messenger (Hỗ trợ đầy đủ văn bản + hình ảnh + Lead Form)
     if (body.object === 'page') {
       for (const entry of body.entry || []) {
-        const pageId = String(entry.id || '');
-        const storedPageName = pageId
-          ? await redisCommand(['HGET', 'omnichat:page_names', pageId])
-          : null;
-        const token = pageId
-          ? await redisCommand(['HGET', 'omnichat:page_tokens', pageId])
-          : null;
-
+        const pageId = String(entry.id);
         for (const event of entry.messaging || []) {
-          const msg = event.message;
-          if (!msg || msg.is_echo) continue;
+          // Bỏ qua các sự kiện không phải tin nhắn hoặc tin nhắn vọng lại (echo) từ Page
+          if (!event.message || event.message.is_echo) continue;
 
           const senderPsid = String(event.sender?.id || '');
           if (!senderPsid || senderPsid === pageId) continue;
 
-          const eventId =
-            msg.mid || `fb_${pageId}_${senderPsid}_${event.timestamp || Date.now()}`;
+          // Chống trùng lặp sự kiện Webhook từ Facebook bằng message.mid
+          const mid = String(event.message.mid || `fb_${pageId}_${senderPsid}_${event.timestamp}`);
+          const isNew = await redisCommand(['SADD', 'omnichat:seen_ids', mid]);
+          if (isNew === 0) continue;
+          await redisCommand(['EXPIRE', 'omnichat:seen_ids', '86400']);
 
-          const alreadySeen = await redisCommand(['SISMEMBER', 'omnichat:seen_ids', eventId]);
-          if (alreadySeen === 1 || alreadySeen === true) continue;
-          await redisCommand(['SADD', 'omnichat:seen_ids', eventId]);
+          // Trích xuất hình ảnh / tệp đính kèm nếu khách gửi ảnh trên Messenger
+          let imageUrl = null;
+          let msgType = 'text';
+          const attachments = event.message.attachments || [];
+          if (attachments.length > 0) {
+            const firstAtt = attachments[0];
+            if (firstAtt.type === 'image' && firstAtt.payload?.url) {
+              msgType = 'image';
+              imageUrl = firstAtt.payload.url;
+            }
+          }
 
-          const hasText = typeof msg.text === 'string' && msg.text.trim().length > 0;
-          const attachmentInfo = extractFacebookAttachment(msg.attachments);
-
-          const msgType = hasText ? 'text' : attachmentInfo.type;
-          const msgText = hasText ? msg.text : attachmentInfo.text;
+          const text =
+            event.message.text ||
+            (imageUrl ? '' : '[Khách gửi tệp đính kèm / nhãn dán]');
 
           let senderName = `Khách Facebook (${senderPsid.slice(-4)})`;
-          let senderAvatar = token
-            ? `https://graph.facebook.com/v21.0/${senderPsid}/picture?type=large&access_token=${encodeURIComponent(
-                token
-              )}`
-            : '';
+          let senderAvatar =
+            'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&h=120&fit=crop&crop=faces';
 
+          const token = await redisCommand(['HGET', 'omnichat:page_tokens', pageId]);
           if (token) {
             try {
               const profileRes = await fetch(
@@ -256,42 +260,31 @@ export default async function handler(req, res) {
                 )}`
               );
               const profile = await profileRes.json();
-              if (profile && !profile.error) {
-                if (profile.name) {
-                  senderName = profile.name;
-                } else if (profile.first_name || profile.last_name) {
-                  senderName = `${profile.last_name || ''} ${profile.first_name || ''}`.trim();
-                }
-                if (profile.profile_pic) {
-                  senderAvatar = profile.profile_pic;
-                }
+              if (profile.name) senderName = profile.name;
+              else if (profile.first_name || profile.last_name) {
+                senderName = `${profile.last_name || ''} ${profile.first_name || ''}`.trim();
               }
+              if (profile.profile_pic) senderAvatar = profile.profile_pic;
             } catch (e) {}
           }
 
           const newEvent = {
-            id: eventId,
+            id: mid,
             direction: 'incoming',
             platform: 'facebook',
             pageId,
-            pageName: storedPageName || 'Fanpage Facebook',
             senderPsid,
             senderName,
             senderAvatar,
             type: msgType,
-            text: msgText,
-            imageUrl: attachmentInfo.imageUrl,
-            videoUrl: attachmentInfo.videoUrl,
-            fileName: attachmentInfo.fileName,
-            fileUrl: attachmentInfo.fileUrl,
+            imageUrl,
+            text,
             timestamp: event.timestamp || Date.now(),
           };
-
           await redisCommand(['LPUSH', 'omnichat:events', JSON.stringify(newEvent)]);
-          await redisCommand(['LTRIM', 'omnichat:events', '0', '199']);
+          await redisCommand(['LTRIM', 'omnichat:events', '0', '299']);
         }
       }
-
       return res.status(200).send('EVENT_RECEIVED');
     }
   }
